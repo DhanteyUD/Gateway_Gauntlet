@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { GameState, TransactionResult, NetworkCondition } from "@/types/game";
 import {
   GAME_STRATEGIES,
@@ -15,7 +16,7 @@ import { TransactionFeed } from "./TransactionFeed";
 import { gameService } from "@/services/gameService";
 
 export const Game: React.FC = () => {
-  const { connected, wallet } = useWallet();
+  const { connected, publicKey } = useWallet();
   const [gameState, setGameState] = useState<GameState>({
     score: 0,
     transactionsAttempted: 0,
@@ -33,10 +34,12 @@ export const Game: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    if (connected && wallet) {
-      startGame();
-    }
-  }, [connected, wallet]);
+    startGame();
+  }, []);
+
+  if (!connected) {
+    return null;
+  }
 
   const startGame = () => {
     setGameState((prev) => ({ ...prev, isPlaying: true }));
@@ -52,7 +55,7 @@ export const Game: React.FC = () => {
   };
 
   const sendTransaction = async (strategyId: string) => {
-    if (!connected || isSending) return;
+    if (isSending) return;
 
     setIsSending(true);
 
@@ -97,29 +100,25 @@ export const Game: React.FC = () => {
     return score * SCORING_RULES.LEVEL_MULTIPLIER * gameState.currentLevel;
   };
 
-  if (!connected) {
-    return (
-      <div className="min-h-screen bg-sanctum-dark text-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Gateway Gauntlet</h1>
-          <p className="text-xl text-gray-400">
-            Connect your wallet to start playing!
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-sanctum-dark text-white p-8">
       <div className="max-w-6xl mx-auto">
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 relative">
+          <div className="absolute top-0 right-0">
+            <WalletMultiButton />
+          </div>
           <h1 className="text-5xl font-bold bg-linear-to-r from-sanctum-primary to-sanctum-secondary bg-clip-text text-transparent">
             Gateway Gauntlet
           </h1>
           <p className="text-gray-400 mt-2">
             Master Solana transaction delivery with Sanctum Gateway
           </p>
+          {connected && publicKey && (
+            <p className="text-sm text-green-400 mt-1">
+              Connected: {publicKey.toString().slice(0, 4)}...
+              {publicKey.toString().slice(-4)}
+            </p>
+          )}
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -137,6 +136,15 @@ export const Game: React.FC = () => {
             <TransactionFeed transactions={transactionHistory} />
           </div>
         </div>
+
+        {connected && (
+          <div className="mt-8 p-4 bg-green-900/20 border border-green-700 rounded-lg">
+            <p className="text-green-400 text-center">
+              🎉 Wallet connected! Ready for real Gateway transactions when you
+              get your API key.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
