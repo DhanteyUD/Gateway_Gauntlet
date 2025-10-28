@@ -8,11 +8,11 @@ import {
   NETWORK_CONDITIONS,
   SCORING_RULES,
 } from "@/constants/gameConfig";
-import { gatewayService } from "@/services/gatewayService";
 import { GameDashboard } from "./GameDashboard";
 import { StrategySelector } from "./StrategySelector";
 import { NetworkMonitor } from "./NetworkMonitor";
 import { TransactionFeed } from "./TransactionFeed";
+import { gameService } from "@/services/gameService";
 
 export const Game: React.FC = () => {
   const { connected, wallet } = useWallet();
@@ -34,7 +34,6 @@ export const Game: React.FC = () => {
 
   useEffect(() => {
     if (connected && wallet) {
-      gatewayService.setWallet(wallet);
       startGame();
     }
   }, [connected, wallet]);
@@ -56,32 +55,20 @@ export const Game: React.FC = () => {
     if (!connected || isSending) return;
 
     setIsSending(true);
-    const strategy = GAME_STRATEGIES.find((s) => s.id === strategyId);
-    if (!strategy) return;
 
     try {
-      const transaction = await gatewayService.buildGameTransaction(
-        [],
-        strategy.gatewayOptions
+      const result = await gameService.sendGameTransaction(
+        strategyId,
+        currentCondition
       );
-      const simulation = await gatewayService.simulateTransaction(transaction);
-
-      const success = Math.random() * 100 < currentCondition.successRate;
-
-      const result: TransactionResult = {
-        success,
-        cost: strategy.cost * (success ? 1 : 0.5),
-        latency: simulation.latency * (0.5 + Math.random()),
-        strategyUsed: strategy.name,
-        signature: success ? `simulated_${Date.now()}` : undefined,
-      };
 
       setGameState((prev) => ({
         ...prev,
         transactionsAttempted: prev.transactionsAttempted + 1,
-        transactionsSuccessful: prev.transactionsSuccessful + (success ? 1 : 0),
+        transactionsSuccessful:
+          prev.transactionsSuccessful + (result.success ? 1 : 0),
         totalCost: prev.totalCost + result.cost,
-        score: prev.score + calculateScore(result, success),
+        score: prev.score + calculateScore(result, result.success),
       }));
 
       setTransactionHistory((prev) => [result, ...prev.slice(0, 9)]);
@@ -89,9 +76,9 @@ export const Game: React.FC = () => {
       console.error("Transaction failed:", error);
       const failedResult: TransactionResult = {
         success: false,
-        cost: strategy.cost * 0.5,
+        cost: 0.0001,
         latency: 0,
-        strategyUsed: strategy.name,
+        strategyUsed: strategyId,
         error: error instanceof Error ? error.message : "Unknown error",
       };
       setTransactionHistory((prev) => [failedResult, ...prev.slice(0, 9)]);
