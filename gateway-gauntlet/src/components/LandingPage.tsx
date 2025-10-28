@@ -14,7 +14,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const { connected } = useWallet();
 
   if (connected) {
-    return null; 
+    return null;
   }
 
   const handlePlayWithoutWallet = () => {
@@ -53,7 +53,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <WalletMultiButton className="!bg-sanctum-primary !text-black !font-bold !px-8 !py-3 !rounded-lg hover:!bg-sanctum-secondary transition-colors" />
+              <WalletMultiButton className="bg-sanctum-primary! text-black! font-bold! px-8! py-3! rounded-lg! hover:bg-sanctum-secondary! transition-colors" />
               <button
                 onClick={handlePlayWithoutWallet}
                 className="px-8 py-3 border-2 border-sanctum-secondary text-sanctum-secondary rounded-lg font-bold hover:bg-sanctum-secondary hover:text-black transition-colors"
@@ -179,7 +179,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div>
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center shrink-0 mt-1">
                     <span className="text-green-500">✓</span>
                   </div>
                   <div>
@@ -249,7 +249,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Solana transactions like a pro.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <WalletMultiButton className="!bg-sanctum-primary !text-black !font-bold !px-6 !py-3 !rounded-lg hover:!bg-sanctum-secondary transition-colors" />
+                  <WalletMultiButton className="bg-sanctum-primary! text-black! font-bold! px-6! py-3! rounded-lg! hover:bg-sanctum-secondary! transition-colors" />
                   <button
                     onClick={handlePlayWithoutWallet}
                     className="px-6 py-3 border-2 border-sanctum-secondary text-sanctum-secondary rounded-lg font-bold hover:bg-sanctum-secondary hover:text-black transition-colors"
