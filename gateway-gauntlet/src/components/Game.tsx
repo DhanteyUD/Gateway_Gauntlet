@@ -15,7 +15,11 @@ import { NetworkMonitor } from "./NetworkMonitor";
 import { TransactionFeed } from "./TransactionFeed";
 import { gameService } from "@/services/gameService";
 
-export const Game: React.FC = () => {
+interface GameProps {
+  playWithoutWallet?: boolean;
+}
+
+export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
   const { connected, publicKey } = useWallet();
   const [gameState, setGameState] = useState<GameState>({
     score: 0,
@@ -36,10 +40,6 @@ export const Game: React.FC = () => {
   useEffect(() => {
     startGame();
   }, []);
-
-  if (!connected) {
-    return null;
-  }
 
   const startGame = () => {
     setGameState((prev) => ({ ...prev, isPlaying: true }));
@@ -65,6 +65,7 @@ export const Game: React.FC = () => {
         currentCondition
       );
 
+      // Update game state with the result
       setGameState((prev) => ({
         ...prev,
         transactionsAttempted: prev.transactionsAttempted + 1,
@@ -100,27 +101,60 @@ export const Game: React.FC = () => {
     return score * SCORING_RULES.LEVEL_MULTIPLIER * gameState.currentLevel;
   };
 
+  const resetGame = () => {
+    setGameState({
+      score: 0,
+      transactionsAttempted: 0,
+      transactionsSuccessful: 0,
+      totalCost: 0,
+      currentLevel: 1,
+      isPlaying: true,
+    });
+    setTransactionHistory([]);
+  };
+
   return (
     <div className="min-h-screen bg-sanctum-dark text-white p-8">
       <div className="max-w-6xl mx-auto">
         <header className="text-center mb-8 relative">
-          <div className="absolute top-0 right-0">
-            <WalletMultiButton />
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1"></div>
+            <div className="flex-1 text-center">
+              <h1 className="text-5xl font-bold bg-linear-to-r from-sanctum-primary to-sanctum-secondary bg-clip-text text-transparent">
+                Gateway Gauntlet
+              </h1>
+              <p className="text-gray-400 mt-2">
+                Master Solana transaction delivery with Sanctum Gateway
+              </p>
+              {connected && publicKey && (
+                <p className="text-sm text-green-400 mt-1">
+                  Connected: {publicKey.toString().slice(0, 4)}...
+                  {publicKey.toString().slice(-4)}
+                </p>
+              )}
+              {playWithoutWallet && (
+                <p className="text-sm text-yellow-400 mt-1">
+                  🎮 Playing in demo mode - Connect wallet for full Gateway
+                  experience
+                </p>
+              )}
+            </div>
+            <div className="flex-1 flex justify-end">
+              {connected ? (
+                <WalletMultiButton />
+              ) : (
+                <button
+                  onClick={resetGame}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  🔄 Reset Game
+                </button>
+              )}
+            </div>
           </div>
-          <h1 className="text-5xl font-bold bg-linear-to-r from-sanctum-primary to-sanctum-secondary bg-clip-text text-transparent">
-            Gateway Gauntlet
-          </h1>
-          <p className="text-gray-400 mt-2">
-            Master Solana transaction delivery with Sanctum Gateway
-          </p>
-          {connected && publicKey && (
-            <p className="text-sm text-green-400 mt-1">
-              Connected: {publicKey.toString().slice(0, 4)}...
-              {publicKey.toString().slice(-4)}
-            </p>
-          )}
         </header>
 
+        {/* Game Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <GameDashboard gameState={gameState} />
@@ -137,11 +171,59 @@ export const Game: React.FC = () => {
           </div>
         </div>
 
+        {/* Game Instructions */}
+        <div className="mt-8 p-6 bg-gray-900/50 rounded-lg border border-gray-700">
+          <h3 className="text-lg font-bold mb-3 text-sanctum-primary">
+            How to Play
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-300">
+            <div>
+              <p className="font-semibold mb-1">🎯 Objective</p>
+              <p>
+                Maximize your score by sending successful transactions with
+                optimal cost and speed.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold mb-1">⚡ Strategies</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>
+                  <span className="text-green-400">Safe</span>: High success
+                  rate, moderate cost
+                </li>
+                <li>
+                  <span className="text-blue-400">Balanced</span>: Good balance
+                  of speed and cost
+                </li>
+                <li>
+                  <span className="text-orange-400">Fast</span>: Maximum speed,
+                  higher cost
+                </li>
+                <li>
+                  <span className="text-yellow-400">Cheap</span>: Lowest cost,
+                  slower speed
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Gateway Benefits */}
         {connected && (
           <div className="mt-8 p-4 bg-green-900/20 border border-green-700 rounded-lg">
             <p className="text-green-400 text-center">
               🎉 Wallet connected! Ready for real Gateway transactions when you
               get your API key.
+            </p>
+          </div>
+        )}
+
+        {/* Demo Mode Info */}
+        {playWithoutWallet && (
+          <div className="mt-4 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+            <p className="text-blue-400 text-center">
+              💡 This is a simulation demonstrating Gateway strategies. Connect
+              your wallet to experience real Gateway transactions!
             </p>
           </div>
         )}

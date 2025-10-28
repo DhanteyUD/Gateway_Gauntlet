@@ -4,12 +4,22 @@ import React from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
-export const LandingPage: React.FC = () => {
+interface LandingPageProps {
+  onPlayWithoutWallet: () => void;
+}
+
+export const LandingPage: React.FC<LandingPageProps> = ({
+  onPlayWithoutWallet,
+}) => {
   const { connected } = useWallet();
 
   if (connected) {
-    return null;
+    return null; 
   }
+
+  const handlePlayWithoutWallet = () => {
+    onPlayWithoutWallet();
+  };
 
   return (
     <div className="min-h-screen bg-sanctum-dark text-white">
@@ -45,11 +55,7 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <WalletMultiButton className="!bg-sanctum-primary !text-black !font-bold !px-8 !py-3 !rounded-lg hover:!bg-sanctum-secondary transition-colors" />
               <button
-                onClick={() =>
-                  document
-                    .getElementById("game-section")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
+                onClick={handlePlayWithoutWallet}
                 className="px-8 py-3 border-2 border-sanctum-secondary text-sanctum-secondary rounded-lg font-bold hover:bg-sanctum-secondary hover:text-black transition-colors"
               >
                 Play Without Wallet
@@ -57,6 +63,7 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Rest of your landing page content remains the same */}
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 mt-20">
             <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-700">
@@ -244,11 +251,7 @@ export const LandingPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <WalletMultiButton className="!bg-sanctum-primary !text-black !font-bold !px-6 !py-3 !rounded-lg hover:!bg-sanctum-secondary transition-colors" />
                   <button
-                    onClick={() =>
-                      document
-                        .getElementById("game-section")
-                        ?.scrollIntoView({ behavior: "smooth" })
-                    }
+                    onClick={handlePlayWithoutWallet}
                     className="px-6 py-3 border-2 border-sanctum-secondary text-sanctum-secondary rounded-lg font-bold hover:bg-sanctum-secondary hover:text-black transition-colors"
                   >
                     Start Playing Now
@@ -261,10 +264,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section
-        id="game-section"
-        className="py-20 px-4 bg-linear-to-br from-sanctum-dark to-gray-900"
-      >
+      <section className="py-20 px-4 bg-linear-to-br from-sanctum-dark to-gray-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl font-bold mb-6">
             Start Your <span className="text-sanctum-primary">Gateway</span>{" "}
@@ -276,7 +276,7 @@ export const LandingPage: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => window.location.reload()}
+              onClick={handlePlayWithoutWallet}
               className="px-8 py-4 bg-sanctum-primary text-black font-bold rounded-lg hover:bg-sanctum-secondary transition-colors text-lg"
             >
               🎮 Launch Game
