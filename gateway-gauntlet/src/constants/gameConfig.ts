@@ -1,3 +1,4 @@
+// constants/gameConfig.ts
 import { GameStrategy, NetworkCondition } from "@/types/game";
 
 export const GAME_STRATEGIES: GameStrategy[] = [
@@ -7,7 +8,9 @@ export const GAME_STRATEGIES: GameStrategy[] = [
     description: "Uses Sanctum Sender for maximum reliability",
     gatewayOptions: {
       strategy: "sanctum",
-      useRelay: true,
+      jitoTipRange: "low",
+      cuPriceRange: "medium",
+      skipSimulation: true,
     },
     risk: "low",
     cost: 0.0001,
@@ -18,8 +21,9 @@ export const GAME_STRATEGIES: GameStrategy[] = [
     description: "Jito + RPC fallback for good speed and cost savings",
     gatewayOptions: {
       strategy: "hybrid",
-      jitoTip: 50000,
-      useRelay: true,
+      jitoTipRange: "medium",
+      cuPriceRange: "medium",
+      skipSimulation: true,
     },
     risk: "medium",
     cost: 0.0002,
@@ -30,8 +34,9 @@ export const GAME_STRATEGIES: GameStrategy[] = [
     description: "Jito bundles only for maximum speed",
     gatewayOptions: {
       strategy: "jito",
-      jitoTip: 200000,
-      useRelay: false,
+      jitoTipRange: "high",
+      cuPriceRange: "high",
+      skipSimulation: true,
     },
     risk: "high",
     cost: 0.0005,
@@ -42,8 +47,9 @@ export const GAME_STRATEGIES: GameStrategy[] = [
     description: "RPC only with multiple endpoints",
     gatewayOptions: {
       strategy: "rpc",
-      useRelay: true,
-      rpcWeights: [40, 30, 30],
+      jitoTipRange: "low",
+      cuPriceRange: "low",
+      skipSimulation: true,
     },
     risk: "medium",
     cost: 0.00005,
@@ -82,4 +88,5 @@ export const SCORING_RULES = {
   COST_EFFICIENCY_MULTIPLIER: 10,
   SPEED_BONUS: 50,
   LEVEL_MULTIPLIER: 2,
+  REAL_GATEWAY_BONUS: 50,
 };

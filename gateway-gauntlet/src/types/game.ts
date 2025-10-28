@@ -7,6 +7,9 @@ export interface GameStrategy {
     jitoTip?: number;
     useRelay?: boolean;
     rpcWeights?: number[];
+    jitoTipRange?: "low" | "medium" | "high" | "max";
+    cuPriceRange?: "low" | "medium" | "high";
+    skipSimulation?: boolean;
   };
   risk: "low" | "medium" | "high";
   cost: number;
@@ -26,6 +29,8 @@ export interface TransactionResult {
   latency: number;
   strategyUsed: string;
   error?: string;
+  realGateway?: boolean;
+  networkCondition?: string;
 }
 
 export interface GameState {
