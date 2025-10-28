@@ -43,6 +43,8 @@ class GatewayService {
       useRelay?: boolean;
       cuPriceRange?: "low" | "medium" | "high";
       jitoTipRange?: "low" | "medium" | "high" | "max";
+      skipSimulation?: boolean;
+      [key: string]: string | number | boolean | undefined;
     } = {}
   ) {
     try {
