@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --font-family-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
   background: #0a0a0a;
   color: white;
+  font-family: "Poppins", sans-serif;
 }
 
 /* Custom scrollbar */
@@ -21,6 +26,35 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #ffd700;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: transparent !important;
+  color: #fff !important;
+  transition: all 0.3s !important;
+  transform: scale(1) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background: #ffd700 !important;
+  color: #1b1718 !important;
+  transform: scale(1.05) !important;
+}
+
+.wallet-adapter-button {
+  background: #e5ff4a !important;
+  color: #1b1718 !important;
+  font-weight: bold !important;
+  border-radius: 12px !important;
+  padding: 1rem 2rem !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.3s !important;
+  transform: scale(1) !important;
+  font-size: 1.125rem !important;
+}
+
+.wallet-adapter-button:hover {
+  background: #ffd700 !important;
+  transform: scale(1.05) !important;
 }
 
 @keyframes gradient {

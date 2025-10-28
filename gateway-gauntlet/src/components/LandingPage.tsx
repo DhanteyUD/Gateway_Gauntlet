@@ -3,6 +3,7 @@
 import React from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import Image from "next/image";
 import {
   Zap,
   Shield,
@@ -16,6 +17,11 @@ import {
   Rocket,
   Cpu,
   Network,
+  Scale,
+  Gamepad,
+  Gamepad2,
+  Shapes,
+  GamepadDirectional,
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -37,7 +43,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#1b1718] text-white font-poppins">
-      {/* Animated Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#e5ff4a]/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#e5ff4a]/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -45,19 +50,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute top-3/4 left-1/3 w-32 h-32 bg-[#e5ff4a]/4 rounded-full blur-2xl animate-pulse delay-1500"></div>
       </div>
 
-      {/* Hero Section */}
       <section className="relative py-20 px-4">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
-            {/* Header Badge */}
             <div className="inline-flex items-center gap-2 mb-6 px-6 py-3 bg-[#e5ff4a]/10 border border-[#e5ff4a]/30 rounded-2xl backdrop-blur-sm">
-              <Rocket className="w-5 h-5 text-[#e5ff4a]" />
-              <span className="text-[#e5ff4a] text-sm font-semibold tracking-wide">
-                SANCTUM HACKATHON 2024
+              <span className="text-[#e5ff4a] text-sm font-semibold tracking-wide uppercase">
+                Sanctum
               </span>
+              <Image
+                src="https://mintcdn.com/sanctum-8b4c5bf5/aA2NSy1MLgkLh8kE/logo/dark.svg?fit=max&auto=format&n=aA2NSy1MLgkLh8kE&q=85&s=537b4693ba9d11b0543b118bdec9d400"
+                alt="sanctum gateway"
+                width={100}
+                height={100}
+              />
             </div>
 
-            {/* Main Title */}
             <h1 className="text-7xl md:text-9xl font-black mb-8 tracking-tighter">
               <span className="bg-linear-to-r from-[#e5ff4a] via-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent animate-gradient">
                 GATEWAY
@@ -81,12 +88,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               .
             </p>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <WalletMultiButton className="bg-[#e5ff4a]! text-[#1b1718]! font-bold! px-8! py-4! rounded-xl! hover:bg-[#ffd700]! transition-all duration-300 transform hover:scale-105 text-lg!" />
+              <WalletMultiButton />
               <button
                 onClick={handlePlayWithoutWallet}
-                className="group flex items-center gap-3 px-8 py-4 border-2 border-[#e5ff4a] text-[#e5ff4a] rounded-xl font-bold hover:bg-[#e5ff4a] hover:text-[#1b1718] transition-all duration-300 transform hover:scale-105"
+                className="group flex items-center gap-3 px-8 py-2.5 border-2 border-[#e5ff4a] text-[#e5ff4a] rounded-xl font-bold hover:bg-[#e5ff4a] hover:text-[#1b1718] transition-all duration-300 transform hover:scale-105 cursor-pointer"
               >
                 <Play className="w-5 h-5" />
                 Play Without Wallet
@@ -97,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Stats Bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#e5ff4a] mb-2">4</div>
+                <div className="text-3xl font-bold text-[#ffd700] mb-2">4</div>
                 <div className="text-gray-400 text-sm">Strategies</div>
               </div>
               <div className="text-center">
@@ -121,9 +127,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 mt-32">
-            <div className="group bg-black/40 backdrop-blur-lg p-8 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 transform hover:scale-105">
+            <div className="group bg-black/40 backdrop-blur-lg p-8 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 transform hover:scale-105 cursor-pointer">
               <div className="w-16 h-16 bg-[#e5ff4a]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#e5ff4a]/20 transition-colors">
                 <Zap className="w-8 h-8 text-[#e5ff4a]" />
               </div>
@@ -136,9 +141,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </p>
             </div>
 
-            <div className="group bg-black/40 backdrop-blur-lg p-8 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 transform hover:scale-105">
+            <div className="group bg-black/40 backdrop-blur-lg p-8 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 transform hover:scale-105 cursor-pointer">
               <div className="w-16 h-16 bg-[#e5ff4a]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#e5ff4a]/20 transition-colors">
-                <Target className="w-8 h-8 text-[#e5ff4a]" />
+                <Gamepad className="w-8 h-8 text-[#e5ff4a]" />
               </div>
               <h3 className="text-2xl font-bold mb-4 text-white">
                 Gamified Learning
@@ -149,7 +154,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </p>
             </div>
 
-            <div className="group bg-black/40 backdrop-blur-lg p-8 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 transform hover:scale-105">
+            <div className="group bg-black/40 backdrop-blur-lg p-8 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 transform hover:scale-105 cursor-pointer">
               <div className="w-16 h-16 bg-[#e5ff4a]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#e5ff4a]/20 transition-colors">
                 <Cpu className="w-8 h-8 text-[#e5ff4a]" />
               </div>
@@ -165,7 +170,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* How It Works Section */}
       <section className="py-20 px-4 bg-black/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -211,11 +215,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               },
             ].map((item, index) => (
               <div key={index} className="text-center group">
-                <div className="relative mb-6">
+                <div className="relative mb-6 cursor-pointer">
                   <div className="w-20 h-20 bg-[#e5ff4a]/10 border-2 border-[#e5ff4a]/30 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-[#e5ff4a]/20 group-hover:border-[#e5ff4a]/50 transition-all duration-300">
                     <item.icon className="w-10 h-10 text-[#e5ff4a]" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#e5ff4a] rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 right-24 w-8 h-8 bg-[#e5ff4a] rounded-full flex items-center justify-center">
                     <span className="text-[#1b1718] text-sm font-black">
                       {item.step}
                     </span>
@@ -233,7 +237,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Gateway Features Section */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -260,7 +263,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     desc: "Jito + RPC fallback saves costs when transactions land through standard RPC",
                   },
                   {
-                    icon: Zap,
+                    icon: Shapes,
                     title: "Multiple Delivery Methods",
                     desc: "Choose between Jito bundles, RPC, Sanctum Sender, and hybrid approaches",
                   },
@@ -270,13 +273,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     desc: "Monitor transaction success rates, latency, and costs in real-time",
                   },
                   {
-                    icon: Network,
+                    icon: Scale,
                     title: "Load Balancing",
                     desc: "Round-robin routing across multiple RPC endpoints for maximum reliability",
                   },
                 ].map((feature, index) => (
                   <div key={index} className="flex items-start space-x-6 group">
-                    <div className="w-12 h-12 bg-[#e5ff4a]/10 rounded-xl flex items-center justify-center shrink-0 mt-1 group-hover:bg-[#e5ff4a]/20 transition-colors">
+                    <div className="w-12 h-12 bg-[#e5ff4a]/10 rounded-xl flex items-center justify-center shrink-0 mt-1 group-hover:bg-[#e5ff4a]/20 transition-colors cursor-pointer">
                       <feature.icon className="w-6 h-6 text-[#e5ff4a]" />
                     </div>
                     <div>
@@ -306,7 +309,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <WalletMultiButton className="bg-[#e5ff4a]! text-[#1b1718]! font-bold! px-6! py-4! rounded-xl! hover:bg-[#ffd700]! transition-all duration-300 transform hover:scale-105" />
                   <button
                     onClick={handlePlayWithoutWallet}
-                    className="group flex items-center gap-3 px-6 py-4 border-2 border-[#e5ff4a] text-[#e5ff4a] rounded-xl font-bold hover:bg-[#e5ff4a] hover:text-[#1b1718] transition-all duration-300 transform hover:scale-105"
+                    className="group flex items-center gap-3 px-6 py-2.5 border-2 border-[#e5ff4a] text-[#e5ff4a] rounded-xl font-bold hover:bg-[#e5ff4a] hover:text-[#1b1718] transition-all duration-300 transform hover:scale-105 cursor-pointer"
                   >
                     <Play className="w-5 h-5" />
                     Start Playing Now
@@ -319,7 +322,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Final CTA Section */}
       <section className="py-20 px-4 bg-linear-to-br from-[#1b1718] to-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-6xl font-black mb-8">
@@ -336,7 +338,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="group flex items-center justify-center gap-4 px-12 py-6 bg-[#e5ff4a] text-[#1b1718] font-black rounded-2xl hover:bg-[#ffd700] transition-all duration-300 transform hover:scale-105 text-lg"
             >
               <Rocket className="w-6 h-6" />
-              🎮 Launch Gateway Gauntlet
+              Launch Gateway Gauntlet
               <ArrowRight className="w-6 h-6 transform group-hover:translate-x-1 transition-transform" />
             </button>
             <a
