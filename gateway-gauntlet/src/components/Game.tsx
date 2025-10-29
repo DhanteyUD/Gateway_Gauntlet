@@ -27,6 +27,8 @@ import {
   Send,
   Cpu,
   Rocket,
+  Code,
+  Server,
   Scale,
 } from "lucide-react";
 
@@ -34,24 +36,78 @@ interface GameProps {
   playWithoutWallet?: boolean;
 }
 
+const GAME_STATE_KEY = "gateway-gauntlet-game-state";
+const TRANSACTION_HISTORY_KEY = "gateway-gauntlet-transaction-history";
+
 export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
   const { connected, publicKey } = useWallet();
-  const [gameState, setGameState] = useState<GameState>({
+
+  const loadGameState = (): GameState => {
+    if (typeof window === "undefined") return getInitialGameState();
+
+    try {
+      const saved = localStorage.getItem(GAME_STATE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...getInitialGameState(),
+          ...parsed,
+          totalRealGatewayUsed: parsed.totalRealGatewayUsed || 0,
+        };
+      }
+    } catch (error) {
+      console.error("Error loading game state:", error);
+    }
+    return getInitialGameState();
+  };
+
+  const loadTransactionHistory = (): TransactionResult[] => {
+    if (typeof window === "undefined") return [];
+
+    try {
+      const saved = localStorage.getItem(TRANSACTION_HISTORY_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error("Error loading transaction history:", error);
+    }
+    return [];
+  };
+
+  const getInitialGameState = (): GameState => ({
     score: 0,
     transactionsAttempted: 0,
     transactionsSuccessful: 0,
     totalCost: 0,
     currentLevel: 1,
     isPlaying: false,
+    totalRealGatewayUsed: 0,
   });
+
+  const [gameState, setGameState] = useState<GameState>(loadGameState);
   const [currentCondition, setCurrentCondition] = useState<NetworkCondition>(
     NETWORK_CONDITIONS[0]
   );
   const [transactionHistory, setTransactionHistory] = useState<
     TransactionResult[]
-  >([]);
+  >(loadTransactionHistory);
   const [isSending, setIsSending] = useState(false);
-  const [realGatewayUsed, setRealGatewayUsed] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
+    }
+  }, [gameState]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        TRANSACTION_HISTORY_KEY,
+        JSON.stringify(transactionHistory)
+      );
+    }
+  }, [transactionHistory]);
 
   useEffect(() => {
     startGame();
@@ -70,6 +126,10 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     return () => clearInterval(interval);
   };
 
+  const calculateLevel = (score: number): number => {
+    return Math.floor(score / 1000) + 1;
+  };
+
   const sendTransaction = async (strategyId: string) => {
     if (isSending) return;
 
@@ -81,14 +141,15 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         currentCondition
       );
 
-      if (result.realGateway) {
-        setRealGatewayUsed((prev) => prev + 1);
-      }
-
-      const normalizedResult: TransactionResult = {
+      const resultWithTimestamp = {
         ...result,
-        networkCondition: String(result.networkCondition ?? ""),
+        timestamp: Date.now(),
       };
+
+      const newScore =
+        gameState.score +
+        calculateScore(result, result.success, result.realGateway);
+      const newLevel = calculateLevel(newScore);
 
       setGameState((prev) => ({
         ...prev,
@@ -96,12 +157,16 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         transactionsSuccessful:
           prev.transactionsSuccessful + (result.success ? 1 : 0),
         totalCost: prev.totalCost + result.cost,
-        score:
-          prev.score +
-          calculateScore(normalizedResult, result.success, result.realGateway),
+        score: newScore,
+        currentLevel: newLevel,
+        totalRealGatewayUsed:
+          prev.totalRealGatewayUsed + (result.realGateway ? 1 : 0),
       }));
 
-      setTransactionHistory((prev) => [normalizedResult, ...prev.slice(0, 9)]);
+      setTransactionHistory((prev) => [
+        resultWithTimestamp,
+        ...prev.slice(0, 19),
+      ]);
     } catch (error) {
       console.error("Transaction failed:", error);
       const failedResult: TransactionResult = {
@@ -111,12 +176,10 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         strategyUsed: strategyId,
         error: error instanceof Error ? error.message : "Unknown error",
         realGateway: false,
-        networkCondition: String(currentCondition.congestion),
+        networkCondition: currentCondition.congestion,
+        timestamp: Date.now(),
       };
-      setTransactionHistory((prev) => [
-        failedResult as TransactionResult,
-        ...prev.slice(0, 9),
-      ]);
+      setTransactionHistory((prev) => [failedResult, ...prev.slice(0, 19)]);
     } finally {
       setIsSending(false);
     }
@@ -128,50 +191,32 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     realGateway?: boolean
   ) => {
     let score = 0;
-
     if (success) {
       score += SCORING_RULES.SUCCESS_BONUS;
-
-      const costEfficiency = Math.min(
-        SCORING_RULES.MAX_COST_EFFICIENCY,
-        (0.001 / result.cost) * SCORING_RULES.COST_EFFICIENCY_MULTIPLIER
-      );
-      score += costEfficiency;
-
-      const speedBonus = Math.max(
-        0,
-        SCORING_RULES.SPEED_BONUS - result.latency / 50
-      );
-      score += speedBonus;
+      score += (1 / result.cost) * SCORING_RULES.COST_EFFICIENCY_MULTIPLIER;
+      score += Math.max(0, SCORING_RULES.SPEED_BONUS - result.latency / 100);
 
       if (realGateway) {
         score += SCORING_RULES.REAL_GATEWAY_BONUS;
       }
-
-      score = Math.min(score, SCORING_RULES.MAX_SCORE_PER_TRANSACTION);
     }
-
-    return score * (1 + (gameState.currentLevel - 1) * 0.1);
+    return score * SCORING_RULES.LEVEL_MULTIPLIER * gameState.currentLevel;
   };
 
   const resetGame = () => {
-    setGameState({
-      score: 0,
-      transactionsAttempted: 0,
-      transactionsSuccessful: 0,
-      totalCost: 0,
-      currentLevel: 1,
-      isPlaying: true,
-    });
+    const newState = getInitialGameState();
+    setGameState(newState);
     setTransactionHistory([]);
-    setRealGatewayUsed(0);
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(GAME_STATE_KEY);
+      localStorage.removeItem(TRANSACTION_HISTORY_KEY);
+    }
   };
 
-  const successRate =
-    gameState.transactionsAttempted > 0
-      ? (gameState.transactionsSuccessful / gameState.transactionsAttempted) *
-        100
-      : 0;
+  if (!connected && !playWithoutWallet) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#1b1718] text-white p-8 font-poppins">
@@ -239,11 +284,11 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
                   </div>
                 )}
 
-                {realGatewayUsed > 0 && (
+                {gameState.totalRealGatewayUsed > 0 && (
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/40 rounded-xl">
                     <Zap className="w-4 h-4 text-blue-400" />
                     <span className="text-blue-400 text-sm">
-                      Real Gateway Used: {realGatewayUsed} times
+                      Real Gateway Used: {gameState.totalRealGatewayUsed} times
                     </span>
                   </div>
                 )}
@@ -266,33 +311,6 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
           </div>
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-[#e5ff4a]">
-              {gameState.score.toFixed(2)}
-            </div>
-            <div className="text-gray-400 text-sm">Total Score</div>
-          </div>
-          <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">
-              {successRate.toFixed(1)}%
-            </div>
-            <div className="text-gray-400 text-sm">Success Rate</div>
-          </div>
-          <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">
-              {gameState.transactionsAttempted}
-            </div>
-            <div className="text-gray-400 text-sm">Transactions</div>
-          </div>
-          <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-[#e5ff4a]">
-              {realGatewayUsed}
-            </div>
-            <div className="text-gray-400 text-sm">Real Gateway</div>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5">
@@ -314,7 +332,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
 
           <div className="lg:col-span-1">
             <div
-              className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5 h-[800px] lg:h-full lg:min-h-[600px]"
+              className="h-[800px] lg:h-full lg:min-h-[600px]"
               style={{ maxHeight: "1282px" }}
             >
               <TransactionFeed transactions={transactionHistory} />
@@ -348,7 +366,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
               <div className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group hover:scale-[1.02]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <Code className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
                     <span className="text-white font-semibold block">
@@ -370,7 +388,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
               <div className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group hover:scale-[1.02]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <Server className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
                     <span className="text-white font-semibold block">
