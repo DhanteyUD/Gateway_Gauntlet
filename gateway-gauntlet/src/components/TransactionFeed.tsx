@@ -60,92 +60,90 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
   };
 
   return (
-    <div className="bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-6 shadow-2xl shadow-[#e5ff4a]/10 h-full overflow-hidden flex flex-col">
-      <div className="h-full">
-        <div className="flex flex-col items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-xl flex items-center justify-center">
-              <BadgeDollarSign className="w-5 h-5 text-[#1b1718]" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
-                Transaction Feed
-              </h2>
-              <p className="text-gray-400 text-sm">
-                Live transaction monitoring
-              </p>
-            </div>
+    <div className="bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-6 shadow-2xl shadow-[#e5ff4a]/10 h-full flex flex-col">
+      <div className="flex flex-col items-center justify-between mb-6 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-xl flex items-center justify-center">
+            <BadgeDollarSign className="w-5 h-5 text-[#1b1718]" />
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-5">
-            <BarChart3 className="w-4 h-4" />
-            <span>{getSuccessRate()} success rate</span>
+          <div>
+            <h2 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
+              Transaction Feed
+            </h2>
+            <p className="text-gray-400 text-sm">Live transaction monitoring</p>
           </div>
         </div>
+        <div className="flex items-center gap-2 text-xs text-gray-500 mt-5">
+          <BarChart3 className="w-4 h-4" />
+          <span>{getSuccessRate()} success rate</span>
+        </div>
+      </div>
 
-        <div className="flex gap-2 mb-6 p-1 bg-black/40 rounded-2xl border border-[#e5ff4a]/20">
-          {[
-            {
-              key: "all" as FilterType,
-              label: "All",
-              count: stats.total,
-              icon: CircleStar,
-              color: "black",
-            },
-            {
-              key: "success" as FilterType,
-              label: "Success",
-              count: stats.success,
-              icon: BadgeCheck,
-              color: "green",
-            },
-            {
-              key: "failed" as FilterType,
-              label: "Failed",
-              count: stats.failed,
-              icon: BadgeX,
-              color: "red",
-            },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveFilter(tab.key)}
-              className={`flex items-center gap-2 px-2 py-2 rounded-xl font-semibold transition-all duration-300 flex-1 justify-center cursor-pointer ${
+      <div className="flex gap-2 mb-6 p-1 bg-black/40 rounded-2xl border border-[#e5ff4a]/20 shrink-0">
+        {[
+          {
+            key: "all" as FilterType,
+            label: "All",
+            count: stats.total,
+            icon: CircleStar,
+            color: "black",
+          },
+          {
+            key: "success" as FilterType,
+            label: "Success",
+            count: stats.success,
+            icon: BadgeCheck,
+            color: "green",
+          },
+          {
+            key: "failed" as FilterType,
+            label: "Failed",
+            count: stats.failed,
+            icon: BadgeX,
+            color: "red",
+          },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveFilter(tab.key)}
+            className={`flex items-center gap-2 px-2 py-2 rounded-xl font-semibold transition-all duration-300 flex-1 justify-center cursor-pointer ${
+              activeFilter === tab.key
+                ? "bg-linear-to-r from-[#e5ff4a] to-[#ffd700] text-[#1b1718] shadow-lg shadow-[#e5ff4a]/25"
+                : "text-gray-300 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <tab.icon
+              className="text-sm"
+              style={{
+                color:
+                  tab.color === "green"
+                    ? activeFilter === tab.key
+                      ? "#1b1718"
+                      : "#05df72"
+                    : tab.color === "red"
+                    ? activeFilter === tab.key
+                      ? "#1b1718"
+                      : "lab(63.7053% 60.745 31.3109)"
+                    : activeFilter === tab.key
+                    ? "#1b1718"
+                    : "#9ca3af",
+              }}
+            />
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded-full ${
                 activeFilter === tab.key
-                  ? "bg-linear-to-r from-[#e5ff4a] to-[#ffd700] text-[#1b1718] shadow-lg shadow-[#e5ff4a]/25"
-                  : "text-gray-300 hover:text-white hover:bg-white/5"
+                  ? "bg-[#1b1718]/30 text-[#1b1718]"
+                  : "bg-gray-700/50 text-gray-400"
               }`}
             >
-              <tab.icon
-                className="text-sm"
-                style={{
-                  color:
-                    tab.color === "green"
-                      ? activeFilter === tab.key
-                        ? "#1b1718"
-                        : "#05df72"
-                      : tab.color === "red"
-                      ? activeFilter === tab.key
-                        ? "#1b1718"
-                        : "lab(63.7053% 60.745 31.3109)"
-                      : activeFilter === tab.key
-                      ? "#1b1718"
-                      : "#9ca3af",
-                }}
-              />
-              <span
-                className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  activeFilter === tab.key
-                    ? "bg-[#1b1718]/30 text-[#1b1718]"
-                    : "bg-gray-700/50 text-gray-400"
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </div>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
 
-        <div className="space-y-3 overflow-y-auto flex-1">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 min-h-0 scrollbar-thin scrollbar-thumb-[#e5ff4a]/30 scrollbar-track-transparent hover:scrollbar-thumb-[#e5ff4a]/50">
+        <div className="space-y-3">
           {filteredTransactions.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
               <Filter className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -184,7 +182,7 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
                         tx.success ? "text-green-400" : "text-red-400"
                       }`}
                     >
-                      {tx.success ? "SUCCESS" : "FAILED"}
+                      {tx.success ? "YAY" : "UH-OH"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -274,19 +272,19 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
             ))
           )}
         </div>
-
-        {transactions.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-[#e5ff4a]/10">
-            <div className="flex items-center justify-between text-xs text-gray-400">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Live feed</span>
-              </div>
-              <div>Last updated: {moment().format("h:mm A")}</div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {transactions.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-[#e5ff4a]/10 shrink-0">
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span>Live feed</span>
+            </div>
+            <div>Last updated: {moment().format("h:mm A")}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
