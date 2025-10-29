@@ -71,7 +71,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               {formatScore(gameState.score)}
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">Total points</div>
+          <div className="text-xs text-gray-400 mt-5">Total points</div>
         </div>
 
         <div className="bg-black/40 flex flex-col justify-between rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group">
@@ -86,7 +86,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               {successRate.toFixed(1)}%
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">
+          <div className="text-xs text-gray-400 mt-5">
             {gameState.transactionsSuccessful}/{gameState.transactionsAttempted}{" "}
             successful
           </div>
@@ -106,7 +106,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               )}
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">Total attempts</div>
+          <div className="text-xs text-gray-400 mt-5">Total attempts</div>
         </div>
 
         <div className="bg-black/40 flex flex-col justify-between rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group">
@@ -121,7 +121,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               {gameState.totalRealGatewayUsed || 0}
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">API calls</div>
+          <div className="text-xs text-gray-400 mt-5">API calls</div>
         </div>
       </div>
 
