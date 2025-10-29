@@ -503,7 +503,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                           {feature.feature}
                         </span>
                       </div>
-                      <p className="text-gray-300 text-lg leading-relaxed">
+                      <p className="text-gray-400 text-lg leading-relaxed">
                         {feature.desc}
                       </p>
                     </div>
