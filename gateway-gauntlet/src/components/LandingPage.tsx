@@ -323,7 +323,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 title: "Balanced",
                 strategy: "hybrid",
                 desc: "Jito + RPC fallback for optimal balance",
-                color: "text-blue-400",
+                color: "text-yellow-400",
                 risk: "Medium",
               },
               {
@@ -331,7 +331,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 title: "Speed Demon",
                 strategy: "jito",
                 desc: "Jito bundles for maximum speed",
-                color: "text-orange-400",
+                color: "text-red-400",
                 risk: "High",
               },
               {
