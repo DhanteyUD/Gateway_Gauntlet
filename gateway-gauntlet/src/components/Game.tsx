@@ -313,7 +313,10 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5 h-full">
+            <div
+              className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5 h-[800px] lg:h-full lg:min-h-[600px]"
+              style={{ maxHeight: "1282px" }}
+            >
               <TransactionFeed transactions={transactionHistory} />
             </div>
           </div>
