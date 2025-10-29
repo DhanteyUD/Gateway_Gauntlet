@@ -61,7 +61,7 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
 
   return (
     <div className="bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-6 shadow-2xl shadow-[#e5ff4a]/10 h-full flex flex-col">
-      <div className="flex flex-col items-center justify-between mb-6 shrink-0">
+      <div className="flex flex-col items-start justify-between mb-6 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-xl flex items-center justify-center">
             <BadgeDollarSign className="w-5 h-5 text-[#1b1718]" />
@@ -73,7 +73,7 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
             <p className="text-gray-400 text-sm">Live transaction monitoring</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500 mt-5">
+        <div className="flex items-center gap-2 text-xs text-gray-500 mt-5 w-full justify-center">
           <BarChart3 className="w-4 h-4" />
           <span>{getSuccessRate()} success rate</span>
         </div>
@@ -142,7 +142,7 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 min-h-0 scrollbar-thin scrollbar-thumb-[#e5ff4a]/30 scrollbar-track-transparent hover:scrollbar-thumb-[#e5ff4a]/50">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 min-h-0 scrollbar-thin scrollbar-thumb-[#e5ff4a]/30 scrollbar-track-transparent hover:scrollbar-thumb-[#e5ff4a]/50">
         <div className="space-y-3">
           {filteredTransactions.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
