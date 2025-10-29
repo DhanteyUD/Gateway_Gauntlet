@@ -22,6 +22,17 @@ export interface NetworkCondition {
   description: string;
 }
 
+export interface GameState {
+  score: number;
+  transactionsAttempted: number;
+  transactionsSuccessful: number;
+  totalCost: number;
+  currentLevel: number;
+  isPlaying: boolean;
+  totalRealGatewayUsed: number;
+  lastTransactionTimestamp?: number;
+}
+
 export interface TransactionResult {
   success: boolean;
   signature?: string;
@@ -31,13 +42,5 @@ export interface TransactionResult {
   error?: string;
   realGateway?: boolean;
   networkCondition?: string;
-}
-
-export interface GameState {
-  score: number;
-  transactionsAttempted: number;
-  transactionsSuccessful: number;
-  totalCost: number;
-  currentLevel: number;
-  isPlaying: boolean;
+  timestamp: number;
 }
