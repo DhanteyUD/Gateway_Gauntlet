@@ -128,16 +128,30 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     realGateway?: boolean
   ) => {
     let score = 0;
+
     if (success) {
       score += SCORING_RULES.SUCCESS_BONUS;
-      score += (1 / result.cost) * SCORING_RULES.COST_EFFICIENCY_MULTIPLIER;
-      score += Math.max(0, SCORING_RULES.SPEED_BONUS - result.latency / 100);
+
+      const costEfficiency = Math.min(
+        SCORING_RULES.MAX_COST_EFFICIENCY,
+        (0.001 / result.cost) * SCORING_RULES.COST_EFFICIENCY_MULTIPLIER
+      );
+      score += costEfficiency;
+
+      const speedBonus = Math.max(
+        0,
+        SCORING_RULES.SPEED_BONUS - result.latency / 50
+      );
+      score += speedBonus;
 
       if (realGateway) {
         score += SCORING_RULES.REAL_GATEWAY_BONUS;
       }
+
+      score = Math.min(score, SCORING_RULES.MAX_SCORE_PER_TRANSACTION);
     }
-    return score * SCORING_RULES.LEVEL_MULTIPLIER * gameState.currentLevel;
+
+    return score * (1 + (gameState.currentLevel - 1) * 0.1);
   };
 
   const resetGame = () => {
