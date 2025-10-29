@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { TransactionResult } from "@/types/game";
 import { CheckCircle, XCircle, Zap, Cpu } from "lucide-react";
