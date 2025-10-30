@@ -17,6 +17,21 @@ interface GameDashboardProps {
 }
 
 export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
+  const calculateBalancedPosition = () => {
+    if (gameState.transactionsAttempted === 0) return 50;
+
+    const wins = gameState.transactionsSuccessful;
+    const total = gameState.transactionsAttempted;
+
+    const smoothingFactor = Math.min(total / 10, 1);
+    const rawPercentage = (wins / total) * 100;
+    const smoothedPercentage = 50 + (rawPercentage - 50) * smoothingFactor;
+
+    return Math.max(10, Math.min(90, smoothedPercentage));
+  };
+
+  const balancedPosition = calculateBalancedPosition();
+
   const successRate =
     gameState.transactionsAttempted > 0
       ? (gameState.transactionsSuccessful / gameState.transactionsAttempted) *
@@ -176,6 +191,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               </span>
             </div>
 
+            {/* Convert below to quote/winning tip */}
             <div className="text-sm text-gray-400">
               Level{" "}
               <span className="text-[#e5ff4a] font-bold">{currentLevel}</span> •
@@ -190,14 +206,14 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
             <div className="w-full h-8 bg-linear-to-r from-gray-600 via-gray-500 to-gray-600 rounded-lg overflow-hidden relative shadow-inner">
               <div
                 className="absolute left-0 top-0 h-full bg-linear-to-r from-green-500 to-green-400 transition-all duration-500 ease-out shadow-lg"
-                style={{ width: `${successRate}%` }}
+                style={{ width: `${balancedPosition}%` }}
               >
                 <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
               </div>
 
               <div
                 className="absolute right-0 top-0 h-full bg-linear-to-l from-red-500 to-red-400 transition-all duration-500 ease-out shadow-lg"
-                style={{ width: `${100 - successRate}%` }}
+                style={{ width: `${100 - balancedPosition}%` }}
               >
                 <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(-45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
               </div>
@@ -209,10 +225,10 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               <div
                 className="absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border-4 transition-all duration-500 ease-out z-20 shadow-xl"
                 style={{
-                  left: `${successRate}%`,
-                  borderColor: successRate >= 50 ? "#22c55e" : "#ef4444",
+                  left: `${balancedPosition}%`,
+                  borderColor: balancedPosition >= 50 ? "#22c55e" : "#ef4444",
                   transform: `translateX(-50%) translateY(-50%) scale(${
-                    1 + Math.abs(successRate - 50) / 100
+                    1 + Math.abs(balancedPosition - 50) / 100
                   })`,
                 }}
               >
@@ -220,7 +236,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
                   className="absolute inset-0 rounded-full animate-ping"
                   style={{
                     backgroundColor:
-                      successRate >= 50
+                      balancedPosition >= 50
                         ? "rgb(34 197 94 / 0.5)"
                         : "rgb(239 68 68 / 0.5)",
                   }}
