@@ -1,19 +1,24 @@
+import { PublicKey } from "@solana/web3.js";
 import { gatewayService } from "./gatewayService";
 import { NetworkCondition } from "@/types/game";
 
 export class GameService {
   async sendGameTransaction(
     strategyId: string,
-    networkCondition: NetworkCondition
+    networkCondition: NetworkCondition,
+    fromPubkey?: PublicKey
   ) {
     try {
       console.log(
-        `🎮 Sending game transaction: ${strategyId} in ${networkCondition.congestion} conditions`
+        `🎮 Sending game transaction: ${strategyId} in ${
+          networkCondition.congestion
+        } conditions, from ${fromPubkey?.toString() || "unknown"}`
       );
 
       const result = await gatewayService.simulateGameTransaction(
         strategyId,
-        networkCondition
+        networkCondition,
+        fromPubkey
       );
 
       return {
@@ -25,6 +30,7 @@ export class GameService {
         realGateway: result._realGateway,
         networkCondition: result._networkCondition,
         error: result.success ? undefined : "Transaction failed",
+        fromAddress: fromPubkey?.toString(),
       };
     } catch (error) {
       console.error("Game service error:", error);
@@ -36,6 +42,7 @@ export class GameService {
         signature: undefined,
         realGateway: false,
         networkCondition: networkCondition.congestion,
+        fromAddress: fromPubkey?.toString(),
         error:
           error instanceof Error ? error.message : "Unknown error occurred",
       };

@@ -14,13 +14,22 @@ if (typeof window !== "undefined") {
   }
 }
 
-export const GATEWAY_ENDPOINT = `https://tpg.sanctum.so/v1/${
-  process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet"
-}?apiKey=${process.env.NEXT_PUBLIC_GATEWAY_API_KEY}`;
+const GATEWAY_PROXY_ENDPOINT = "/api/gateway";
 
 interface NetworkCondition {
   successRate: number;
   congestion?: string | number;
+}
+interface BuildTransactionOptions {
+  strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
+  jitoTip?: number;
+  useRelay?: boolean;
+  cuPriceRange?: "low" | "medium" | "high";
+  jitoTipRange?: "low" | "medium" | "high" | "max";
+  skipSimulation?: boolean;
+  deliveryMethodType?: "rpc" | "jito" | "sanctum-sender" | "helius-sender";
+  fromPubkey?: PublicKey;
+  [key: string]: string | number | boolean | PublicKey | undefined;
 }
 
 function encodeTransactionToBase64(transaction: Transaction): string {
@@ -35,22 +44,23 @@ class GatewayService {
     this.connection = new Connection(clusterApiUrl("devnet"));
   }
 
-  // REAL Gateway Integration - builds transaction with Gateway
-  async buildGatewayTransaction(
-    options: {
-      strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
-      jitoTip?: number;
-      useRelay?: boolean;
-      cuPriceRange?: "low" | "medium" | "high";
-      jitoTipRange?: "low" | "medium" | "high" | "max";
-      skipSimulation?: boolean;
-      [key: string]: string | number | boolean | undefined;
-    } = {}
-  ) {
+  async buildGatewayTransaction(options: BuildTransactionOptions = {}) {
     try {
-      // NB: this is just for demo - won't actually execute)
-      const fromPubkey = new PublicKey("11111111111111111111111111111111"); // System program
-      const toPubkey = new PublicKey("11111111111111111111111111111112"); // Demo account
+      const fromPubkey =
+        options.fromPubkey || new PublicKey("11111111111111111111111111111111");
+
+      const toPubkey = process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS
+        ? new PublicKey(process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS)
+        : new PublicKey("11111111111111111111111111111112");
+
+      console.log("🔧 Creating transaction with:", {
+        from: fromPubkey.toString(),
+        to: toPubkey.toString(),
+        strategy: options.strategy,
+      });
+
+      const { blockhash, lastValidBlockHeight } =
+        await this.connection.getLatestBlockhash();
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -60,66 +70,96 @@ class GatewayService {
         })
       );
 
-      const { blockhash } = await this.connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = fromPubkey;
 
       const encodedTransaction = encodeTransactionToBase64(transaction);
 
       console.log("🔧 Building Gateway transaction with options:", options);
-
-      const buildGatewayTransactionResponse = await fetch(GATEWAY_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: "gateway-gauntlet",
-          jsonrpc: "2.0",
-          method: "buildGatewayTransaction",
-          params: [
-            encodedTransaction,
-            {
-              encoding: "base64",
-              skipSimulation: true,
-              strategy: options.strategy || "hybrid",
-              jitoTip: options.jitoTip,
-              jitoTipRange: options.jitoTipRange,
-              cuPriceRange: options.cuPriceRange || "medium",
-              ...options,
-            },
-          ],
-        }),
+      console.log("📦 Transaction details:", {
+        blockhash: blockhash.slice(0, 8) + "...",
+        lastValidBlockHeight,
+        from: fromPubkey.toString().slice(0, 8) + "...",
+        to: toPubkey.toString().slice(0, 8) + "...",
+        lamports: 1000,
       });
+
+      const gatewayParams: Record<string, string | boolean> = {
+        encoding: "base64",
+      };
+
+      if (options.skipSimulation !== undefined) {
+        gatewayParams.skipSimulation = options.skipSimulation;
+      }
+
+      if (options.strategy) {
+        const deliveryMethodMap: Record<string, string> = {
+          jito: "jito",
+          rpc: "rpc",
+          sanctum: "sanctum-sender",
+          hybrid: "rpc",
+        };
+
+        const deliveryMethod = deliveryMethodMap[options.strategy];
+        if (deliveryMethod) {
+          gatewayParams.deliveryMethodType = deliveryMethod;
+        }
+      }
+
+      if (options.jitoTipRange) {
+        gatewayParams.jitoTipRange = options.jitoTipRange;
+      }
+
+      if (options.cuPriceRange) {
+        gatewayParams.cuPriceRange = options.cuPriceRange;
+      }
+
+      if (options.deliveryMethodType) {
+        gatewayParams.deliveryMethodType = options.deliveryMethodType;
+      }
+
+      console.log("📦 Gateway params being sent:", gatewayParams);
+
+      const buildGatewayTransactionResponse = await fetch(
+        GATEWAY_PROXY_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: "gateway-gauntlet",
+            jsonrpc: "2.0",
+            method: "buildGatewayTransaction",
+            params: [encodedTransaction, gatewayParams],
+          }),
+        }
+      );
 
       if (!buildGatewayTransactionResponse.ok) {
         const errorText = await buildGatewayTransactionResponse.text();
+        console.error("❌ Gateway build HTTP error:", {
+          status: buildGatewayTransactionResponse.status,
+          error: errorText,
+        });
         throw new Error(
-          `Gateway build failed: ${buildGatewayTransactionResponse.status} - ${errorText}`
+          `Gateway build failed: ${buildGatewayTransactionResponse.status}`
         );
       }
 
       const response = await buildGatewayTransactionResponse.json();
 
       if (response.error) {
-        throw new Error(`Gateway error: ${response.error.message}`);
+        console.error("Gateway build error details:", response.error);
+        throw new Error(
+          `Gateway error: ${response.error.message} (code: ${response.error.code})`
+        );
       }
 
-      const { result } = response as {
-        result: {
-          transaction: string;
-          latestBlockhash: {
-            blockhash: string;
-            lastValidBlockHeight: string;
-          };
-        };
-      };
-
       console.log("✅ Gateway transaction built successfully");
-
       return {
-        transaction: result.transaction,
-        latestBlockhash: result.latestBlockhash,
+        transaction: response.result.transaction,
+        latestBlockhash: response.result.latestBlockhash,
         _realGateway: true,
       };
     } catch (error) {
@@ -132,7 +172,7 @@ class GatewayService {
     try {
       console.log("🚀 Sending transaction via Gateway...");
 
-      const sendTransactionResponse = await fetch(GATEWAY_ENDPOINT, {
+      const sendTransactionResponse = await fetch(GATEWAY_PROXY_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,7 +181,12 @@ class GatewayService {
           id: "gateway-gauntlet",
           jsonrpc: "2.0",
           method: "sendTransaction",
-          params: [encodedTransaction],
+          params: [
+            encodedTransaction,
+            {
+              encoding: "base64",
+            },
+          ],
         }),
       });
 
@@ -207,7 +252,8 @@ class GatewayService {
 
   async simulateGameTransaction(
     strategy: string,
-    networkCondition: NetworkCondition
+    networkCondition: NetworkCondition,
+    fromPubkey?: PublicKey
   ): Promise<{
     success: boolean;
     cost: number;
@@ -223,20 +269,48 @@ class GatewayService {
         {
           strategy: "jito" | "rpc" | "hybrid" | "sanctum";
           jitoTipRange?: "low" | "medium" | "high" | "max";
+          cuPriceRange?: "low" | "medium" | "high";
         }
       > = {
-        safe: { strategy: "sanctum", jitoTipRange: "low" },
-        balanced: { strategy: "hybrid", jitoTipRange: "medium" },
-        fast: { strategy: "jito", jitoTipRange: "high" },
-        cheap: { strategy: "rpc", jitoTipRange: "low" },
+        safe: {
+          strategy: "sanctum",
+          jitoTipRange: "low",
+          cuPriceRange: "medium",
+        },
+        balanced: {
+          strategy: "hybrid",
+          jitoTipRange: "medium",
+          cuPriceRange: "medium",
+        },
+        fast: {
+          strategy: "jito",
+          jitoTipRange: "high",
+          cuPriceRange: "high",
+        },
+        cheap: {
+          strategy: "rpc",
+          jitoTipRange: "low",
+          cuPriceRange: "low",
+        },
       };
 
-      const gatewayOptions = strategyMap[strategy] || { strategy: "hybrid" };
+      const gatewayOptions = strategyMap[strategy] || {
+        strategy: "hybrid",
+        cuPriceRange: "medium",
+      };
 
       const hasValidApiKey = process.env.NEXT_PUBLIC_GATEWAY_API_KEY;
 
-      if (hasValidApiKey) {
-        const buildResult = await this.buildGatewayTransaction(gatewayOptions);
+      if (hasValidApiKey && fromPubkey) {
+        console.log(
+          "🔧 Attempting real Gateway transaction with user wallet:",
+          fromPubkey.toString()
+        );
+
+        const buildResult = await this.buildGatewayTransaction({
+          ...gatewayOptions,
+          fromPubkey,
+        });
 
         let success;
         let signature;
@@ -253,6 +327,7 @@ class GatewayService {
           console.log("🎯 REAL Gateway transaction attempted:", {
             success,
             signature: signature?.slice(0, 20) + "...",
+            fromAddress: fromPubkey.toString(),
           });
         } else {
           type SimulatedBuildResult = {
@@ -295,7 +370,11 @@ class GatewayService {
           _networkCondition: networkCondition.congestion,
         };
       } else {
-        console.log("🔑 No valid Gateway API key, using simulation");
+        if (!fromPubkey) {
+          console.log("🔑 No wallet connected, using simulation");
+        } else {
+          console.log("🔑 No valid Gateway API key, using simulation");
+        }
         return this.basicSimulation(strategy, networkCondition);
       }
     } catch (error) {
