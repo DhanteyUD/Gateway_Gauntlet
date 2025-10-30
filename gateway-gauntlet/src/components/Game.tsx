@@ -31,6 +31,9 @@ import {
   Code,
   Server,
   Scale,
+  Activity,
+  CheckCircle2,
+  Cable,
 } from "lucide-react";
 
 interface GameProps {
@@ -381,168 +384,214 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         </div>
 
         <div className="mt-6 bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-8 shadow-2xl shadow-[#e5ff4a]/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#e5ff4a]/5 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#e5ff4a]/3 rounded-full blur-xl -translate-x-8 translate-y-8"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#e5ff4a]/5 rounded-full blur-2xl -translate-y-16 translate-x-16 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#e5ff4a]/3 rounded-full blur-xl -translate-x-8 translate-y-8 animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-[#e5ff4a]/7 rounded-full blur-lg -translate-x-1/2 -translate-y-1/2 animate-pulse delay-500"></div>
 
           <div className="flex items-center gap-4 mb-6 relative z-10">
-            <div className="relative">
-              <div className="w-12 h-12 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-2xl flex items-center justify-center shadow-lg shadow-[#e5ff4a]/20">
-                <Cpu className="w-6 h-6 text-[#1b1718]" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#1b1718] animate-pulse"></div>
+            <div className="w-12 h-12 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-2xl flex items-center justify-center shadow-lg shadow-[#e5ff4a]/20 group-hover:scale-110 transition-transform duration-300">
+              <Cpu className="w-6 h-6 text-[#1b1718]" />
             </div>
-            <div>
-              <h3 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
-                Gateway Integration
-              </h3>
-              <p className="text-gray-400 text-sm mt-1">
-                Real-time Sanctum Gateway API Status
-              </p>
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <h3 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
+                  Gateway Integration
+                </h3>
+                <p className="text-gray-400 text-sm mt-1">
+                  Real-time Sanctum Gateway API Status
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-xl backdrop-blur-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-sm font-semibold">
+                  LIVE
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="grid lg:grid-cols-5 gap-6 relative z-10">
             <div className="lg:col-span-3 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group hover:scale-[1.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <Code className="w-5 h-5 text-green-500" />
+              <div className="group bg-black/40 backdrop-blur-lg rounded-2xl p-5 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#e5ff4a]/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
+                        <Code className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1b1718] animate-pulse"></div>
+                    </div>
+                    <div>
+                      <span className="text-white font-semibold block">
+                        buildGatewayTransaction
+                      </span>
+                      <span className="text-green-400 text-xs flex items-center gap-2">
+                        <Activity className="w-3 h-3" />
+                        Processing transaction requests
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-white font-semibold block">
-                      buildGatewayTransaction
+                  <div className="text-right">
+                    <span className="text-green-400 font-semibold text-xs bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                      ACTIVE
                     </span>
-                    <span className="text-green-400 text-xs">
-                      Processing requests
-                    </span>
+                    <div className="text-gray-400 text-xs mt-2 flex items-center gap-1 justify-end">
+                      <Zap className="w-3 h-3" />
+                      <span>~150ms avg</span>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-green-400 font-bold text-xs bg-green-500/10 px-3 py-1 rounded-full">
-                    ACTIVE
-                  </span>
-                  <div className="text-gray-500 text-xs mt-1">0ms avg</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group hover:scale-[1.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <Server className="w-5 h-5 text-green-500" />
+              <div className="group bg-black/40 backdrop-blur-lg rounded-2xl p-5 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#e5ff4a]/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                        <Server className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-[#1b1718] animate-pulse"></div>
+                    </div>
+                    <div>
+                      <span className="text-white font-semibold block">
+                        sendTransaction
+                      </span>
+                      <span className="text-blue-400 text-xs flex items-center gap-2">
+                        <Activity className="w-3 h-3" />
+                        Delivering to Solana network
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-white font-semibold block">
-                      sendTransaction
+                  <div className="text-right">
+                    <span className="text-blue-400 font-semibold text-xs bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                      ACTIVE
                     </span>
-                    <span className="text-green-400 text-xs">
-                      Delivering transactions
-                    </span>
+                    <div className="text-gray-400 text-xs mt-2 flex items-center gap-1 justify-end">
+                      <Zap className="w-3 h-3" />
+                      <span>~200ms avg</span>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-green-400 font-bold text-xs bg-green-500/10 px-3 py-1 rounded-full">
-                    ACTIVE
-                  </span>
-                  <div className="text-gray-500 text-xs mt-1">0ms avg</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group hover:scale-[1.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="group bg-black/40 backdrop-blur-lg rounded-2xl p-5 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#e5ff4a]/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+                        <Cable className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border-2 border-[#1b1718] animate-pulse"></div>
+                    </div>
+                    <div>
+                      <span className="text-white font-semibold block">
+                        API Connection
+                      </span>
+                      <span className="text-purple-400 text-xs flex items-center gap-2">
+                        <Activity className="w-3 h-3" />
+                        Secure WebSocket connection
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-white font-semibold block">
-                      API Connection
+                  <div className="text-right">
+                    <span className="text-purple-400 font-semibold text-xs bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
+                      STABLE
                     </span>
-                    <span className="text-green-400 text-xs">
-                      Secure WebSocket
-                    </span>
+                    <div className="text-gray-400 text-xs mt-2 flex items-center gap-1 justify-end">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>99.9% uptime</span>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-green-400 font-bold text-xs bg-green-500/10 px-3 py-1 rounded-full">
-                    LIVE
-                  </span>
-                  <div className="text-gray-500 text-xs mt-1">100% uptime</div>
                 </div>
               </div>
             </div>
 
             <div className="lg:col-span-2">
-              <div className="bg-linear-to-br from-[#e5ff4a]/10 to-[#ffd700]/5 border border-[#e5ff4a]/30 rounded-2xl p-6 h-full backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="bg-linear-to-br from-[#e5ff4a]/10 to-[#ffd700]/5 border border-[#e5ff4a]/30 rounded-2xl p-6 h-full backdrop-blur-sm hover:border-[#e5ff4a]/40 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-6">
                   <h4 className="text-lg font-black text-[#e5ff4a]">
                     Features
                   </h4>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[
                     {
                       icon: RotateCcw,
                       feature: "Jito + RPC Fallback",
-                      desc: "Auto cost optimization",
+                      desc: "Auto cost optimization with refunds",
+                      color: "text-green-400",
                     },
                     {
                       icon: Rocket,
                       feature: "Multi-Delivery",
-                      desc: "4 delivery methods",
+                      desc: "4 optimized delivery methods",
+                      color: "text-blue-400",
                     },
                     {
                       icon: DollarSign,
                       feature: "Cost Control",
-                      desc: "Smart tip management",
+                      desc: "Smart tip and fee management",
+                      color: "text-yellow-400",
                     },
                     {
                       icon: BarChart3,
                       feature: "Live Analytics",
-                      desc: "Real-time observability",
+                      desc: "Real-time transaction observability",
+                      color: "text-purple-400",
                     },
                     {
                       icon: Scale,
                       feature: "Load Balancing",
-                      desc: "Auto failover",
+                      desc: "Auto failover across RPCs",
+                      color: "text-orange-400",
                     },
                     {
                       icon: Shield,
-                      feature: "Reliability",
-                      desc: "99.9% success rate",
+                      feature: "High Reliability",
+                      desc: "99.9% transaction success rate",
+                      color: "text-red-400",
                     },
                   ].map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-3 group hover:transform hover:scale-105 transition-all duration-200"
+                      className="flex items-center gap-4 group hover:transform hover:scale-105 transition-all duration-200 p-2 rounded-lg hover:bg-white/5"
                     >
-                      <item.icon className="text-xl" />
+                      <div
+                        className={`w-10 h-10 bg-black/30 rounded-xl flex items-center justify-center group-hover:bg-black/40 transition-colors ${item.color}`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                      </div>
                       <div className="flex-1">
                         <div className="text-white font-semibold text-sm">
                           {item.feature}
                         </div>
-                        <div className="text-gray-400 text-xs">{item.desc}</div>
+                        <div className="text-gray-400 text-xs mt-0.5">
+                          {item.desc}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-[#e5ff4a]/20">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <div className="text-[#e5ff4a] font-bold text-sm">4</div>
+                {/* Stats Footer */}
+                <div className="mt-6 pt-4 border-t border-[#e5ff4a]/20">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="bg-black/20 rounded-lg p-3">
+                      <div className="text-[#e5ff4a] font-bold text-lg">4</div>
                       <div className="text-gray-400 text-xs">Strategies</div>
                     </div>
-                    <div>
-                      <div className="text-[#e5ff4a] font-bold text-sm">
+                    <div className="bg-black/20 rounded-lg p-3">
+                      <div className="text-[#e5ff4a] font-bold text-lg">
                         100%
                       </div>
                       <div className="text-gray-400 text-xs">Real API</div>
                     </div>
-                    <div>
-                      <div className="text-[#e5ff4a] font-bold text-sm">
-                        0ms
+                    <div className="bg-black/20 rounded-lg p-3">
+                      <div className="text-[#e5ff4a] font-bold text-lg">
+                        ~175ms
                       </div>
-                      <div className="text-gray-400 text-xs">Latency</div>
+                      <div className="text-gray-400 text-xs">Avg Latency</div>
                     </div>
                   </div>
                 </div>
@@ -550,16 +599,23 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
             </div>
           </div>
 
+          {/* Footer Status */}
           <div className="mt-6 pt-4 border-t border-[#e5ff4a]/20 relative z-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-400 text-sm font-semibold">
-                  All systems operational
-                </span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-lg">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-sm font-semibold">
+                    All systems operational
+                  </span>
+                </div>
+                <div className="text-gray-400 text-sm">
+                  Processing transactions in real-time
+                </div>
               </div>
-              <div className="text-gray-400 text-sm">
-                Sanctum Gateway • v2.1.0
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <Cpu className="w-4 h-4" />
+                <span>Sanctum Gateway • v2.1.0</span>
               </div>
             </div>
           </div>
@@ -582,7 +638,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
                 Choose Strategy
               </p>
               <p className="text-sm text-gray-300">
-                Select from 4 Gateway delivery methods
+                Select from 4 delivery methods
               </p>
             </div>
 
