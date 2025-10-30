@@ -2,7 +2,15 @@
 
 import React from "react";
 import { GameState } from "@/types/game";
-import { Target, Send, Zap, TrendingUp, Cpu, Gamepad2 } from "lucide-react";
+import {
+  Target,
+  Send,
+  Zap,
+  TrendingUp,
+  Cpu,
+  Gamepad2,
+  Swords,
+} from "lucide-react";
 
 interface GameDashboardProps {
   gameState: GameState;
@@ -13,7 +21,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
     gameState.transactionsAttempted > 0
       ? (gameState.transactionsSuccessful / gameState.transactionsAttempted) *
         100
-      : 0;
+      : 50;
 
   const calculateLevel = (score: number): number => {
     return Math.floor(score / 1000) + 1;
@@ -125,34 +133,125 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
         </div>
       </div>
 
-      <div className="bg-black/40 rounded-2xl p-4 border border-[#e5ff4a]/20">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#e5ff4a]" />
-            <span className="text-gray-300 font-semibold">Level Progress</span>
+      <div className="flex flex-col gap-2">
+        <div className="bg-black/40 rounded-2xl p-4 border border-[#e5ff4a]/20">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#e5ff4a]" />
+              <span className="text-gray-300 font-semibold">
+                Level Progress
+              </span>
+            </div>
+
+            <div className="text-sm text-gray-400">
+              Level{" "}
+              <span className="text-[#e5ff4a] font-bold">{currentLevel}</span> •
+              Next:{" "}
+              <span className="text-[#e5ff4a] font-bold">
+                {nextLevelScore} points
+              </span>
+            </div>
           </div>
 
-          <div className="text-sm text-gray-400">
-            Level{" "}
-            <span className="text-[#e5ff4a] font-bold">{currentLevel}</span> •
-            Next:{" "}
-            <span className="text-[#e5ff4a] font-bold">
-              {nextLevelScore} points
-            </span>
+          <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden">
+            <div
+              className="bg-linear-to-r from-[#e5ff4a] to-[#ffd700] h-3 rounded-full transition-all duration-500 ease-out shadow-lg shadow-[#e5ff4a]/30"
+              style={{ width: `${levelProgress}%` }}
+            ></div>
+          </div>
+
+          <div className="flex justify-between text-xs text-gray-400 mt-2">
+            <span>Level {currentLevel}</span>
+            <span>{levelProgress.toFixed(1)}% to next level</span>
+            <span>Level {currentLevel + 1}</span>
           </div>
         </div>
 
-        <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden">
-          <div
-            className="bg-linear-to-r from-[#e5ff4a] to-[#ffd700] h-3 rounded-full transition-all duration-500 ease-out shadow-lg shadow-[#e5ff4a]/30"
-            style={{ width: `${levelProgress}%` }}
-          ></div>
-        </div>
+        <div className="bg-black/40 rounded-2xl p-4 border border-[#e5ff4a]/20">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Swords className="w-4 h-4 text-[#e5ff4a]" />
+              <span className="text-gray-300 font-semibold">
+                Win/Loss Battle
+              </span>
+            </div>
 
-        <div className="flex justify-between text-xs text-gray-400 mt-2">
-          <span>Level {currentLevel}</span>
-          <span>{levelProgress.toFixed(1)}% to next level</span>
-          <span>Level {currentLevel + 1}</span>
+            <div className="text-sm text-gray-400">
+              Level{" "}
+              <span className="text-[#e5ff4a] font-bold">{currentLevel}</span> •
+              Next:{" "}
+              <span className="text-[#e5ff4a] font-bold">
+                {nextLevelScore} points
+              </span>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="w-full h-8 bg-linear-to-r from-gray-600 via-gray-500 to-gray-600 rounded-lg overflow-hidden relative shadow-inner">
+              <div
+                className="absolute left-0 top-0 h-full bg-linear-to-r from-green-500 to-green-400 transition-all duration-500 ease-out shadow-lg"
+                style={{ width: `${successRate}%` }}
+              >
+                <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
+              </div>
+
+              <div
+                className="absolute right-0 top-0 h-full bg-linear-to-l from-red-500 to-red-400 transition-all duration-500 ease-out shadow-lg"
+                style={{ width: `${100 - successRate}%` }}
+              >
+                <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(-45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
+              </div>
+
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-10 bg-[#e5ff4a] shadow-lg shadow-[#e5ff4a]/50 z-10">
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#e5ff4a] rotate-45 shadow-lg shadow-[#e5ff4a]/50"></div>
+              </div>
+
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border-4 transition-all duration-500 ease-out z-20 shadow-xl"
+                style={{
+                  left: `${successRate}%`,
+                  borderColor: successRate >= 50 ? "#22c55e" : "#ef4444",
+                  transform: `translateX(-50%) translateY(-50%) scale(${
+                    1 + Math.abs(successRate - 50) / 100
+                  })`,
+                }}
+              >
+                <div
+                  className="absolute inset-0 rounded-full animate-ping"
+                  style={{
+                    backgroundColor:
+                      successRate >= 50
+                        ? "rgb(34 197 94 / 0.5)"
+                        : "rgb(239 68 68 / 0.5)",
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mt-3 text-xs font-bold">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
+                <span className="text-green-400">
+                  WINS: {gameState.transactionsSuccessful}
+                </span>
+              </div>
+              <div className="text-gray-400">
+                {gameState.transactionsAttempted === 0
+                  ? "⚡ Ready to Battle!"
+                  : successRate >= 50
+                  ? "🏆 Winning!"
+                  : "⚔️ Losing"}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-red-400">
+                  LOSSES:{" "}
+                  {gameState.transactionsAttempted -
+                    gameState.transactionsSuccessful}
+                </span>
+                <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
