@@ -14,9 +14,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-export const GATEWAY_ENDPOINT = `https://tpg.sanctum.so/v1/${
-  process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet"
-}?apiKey=${process.env.NEXT_PUBLIC_GATEWAY_API_KEY}`;
+const GATEWAY_PROXY_ENDPOINT = "/api/gateway";
 
 interface NetworkCondition {
   successRate: number;
@@ -35,7 +33,6 @@ class GatewayService {
     this.connection = new Connection(clusterApiUrl("devnet"));
   }
 
-  // REAL Gateway Integration - builds transaction with Gateway
   async buildGatewayTransaction(
     options: {
       strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
@@ -48,9 +45,9 @@ class GatewayService {
     } = {}
   ) {
     try {
-      // NB: this is just for demo - won't actually execute)
-      const fromPubkey = new PublicKey("11111111111111111111111111111111"); // System program
-      const toPubkey = new PublicKey("11111111111111111111111111111112"); // Demo account
+      // Create demo transaction
+      const fromPubkey = new PublicKey("11111111111111111111111111111111");
+      const toPubkey = new PublicKey("11111111111111111111111111111112");
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -68,29 +65,30 @@ class GatewayService {
 
       console.log("🔧 Building Gateway transaction with options:", options);
 
-      const buildGatewayTransactionResponse = await fetch(GATEWAY_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: "gateway-gauntlet",
-          jsonrpc: "2.0",
-          method: "buildGatewayTransaction",
-          params: [
-            encodedTransaction,
-            {
-              encoding: "base64",
-              skipSimulation: true,
-              strategy: options.strategy || "hybrid",
-              jitoTip: options.jitoTip,
-              jitoTipRange: options.jitoTipRange,
-              cuPriceRange: options.cuPriceRange || "medium",
-              ...options,
-            },
-          ],
-        }),
-      });
+      const buildGatewayTransactionResponse = await fetch(
+        GATEWAY_PROXY_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            method: "buildGatewayTransaction",
+            params: [
+              encodedTransaction,
+              {
+                encoding: "base64",
+                skipSimulation: true,
+                strategy: options.strategy || "hybrid",
+                jitoTip: options.jitoTip,
+                jitoTipRange: options.jitoTipRange,
+                cuPriceRange: options.cuPriceRange || "medium",
+                ...options,
+              },
+            ],
+          }),
+        }
+      );
 
       if (!buildGatewayTransactionResponse.ok) {
         const errorText = await buildGatewayTransactionResponse.text();
@@ -105,15 +103,7 @@ class GatewayService {
         throw new Error(`Gateway error: ${response.error.message}`);
       }
 
-      const { result } = response as {
-        result: {
-          transaction: string;
-          latestBlockhash: {
-            blockhash: string;
-            lastValidBlockHeight: string;
-          };
-        };
-      };
+      const { result } = response;
 
       console.log("✅ Gateway transaction built successfully");
 
@@ -132,14 +122,12 @@ class GatewayService {
     try {
       console.log("🚀 Sending transaction via Gateway...");
 
-      const sendTransactionResponse = await fetch(GATEWAY_ENDPOINT, {
+      const sendTransactionResponse = await fetch(GATEWAY_PROXY_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: "gateway-gauntlet",
-          jsonrpc: "2.0",
           method: "sendTransaction",
           params: [encodedTransaction],
         }),
