@@ -150,7 +150,6 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
         </div>
       </div>
 
-      {/* Real-time Indicator */}
       <div className="flex items-center gap-2 mt-4 justify-end">
         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
         <span className="text-xs text-gray-400">Live updates every 30s</span>
