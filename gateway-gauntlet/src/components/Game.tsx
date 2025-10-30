@@ -143,9 +143,9 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
       if (!publicKey) return;
       
       const result = await gameService.sendGameTransaction(
-        publicKey,
         strategyId,
-        currentCondition
+        currentCondition,
+        publicKey
       );
 
       const resultWithTimestamp: TransactionResult = {

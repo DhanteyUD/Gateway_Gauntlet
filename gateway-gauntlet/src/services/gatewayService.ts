@@ -20,6 +20,17 @@ interface NetworkCondition {
   successRate: number;
   congestion?: string | number;
 }
+interface BuildTransactionOptions {
+  strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
+  jitoTip?: number;
+  useRelay?: boolean;
+  cuPriceRange?: "low" | "medium" | "high";
+  jitoTipRange?: "low" | "medium" | "high" | "max";
+  skipSimulation?: boolean;
+  deliveryMethodType?: "rpc" | "jito" | "sanctum-sender" | "helius-sender";
+  fromPubkey?: PublicKey;
+  [key: string]: string | number | boolean | PublicKey | undefined;
+}
 
 function encodeTransactionToBase64(transaction: Transaction): string {
   const serialized = transaction.serialize({ requireAllSignatures: false });
@@ -33,33 +44,19 @@ class GatewayService {
     this.connection = new Connection(clusterApiUrl("devnet"));
   }
 
-  async buildGatewayTransaction(
-    userWallet: PublicKey | null,
-    options: {
-      strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
-      jitoTip?: number;
-      useRelay?: boolean;
-      cuPriceRange?: "low" | "medium" | "high";
-      jitoTipRange?: "low" | "medium" | "high" | "max";
-      skipSimulation?: boolean;
-      deliveryMethodType?: "rpc" | "jito" | "sanctum-sender" | "helius-sender";
-      [key: string]: string | number | boolean | undefined;
-    } = {}
-  ) {
+  async buildGatewayTransaction(options: BuildTransactionOptions = {}) {
     try {
-      const fromPubkey = userWallet;
-      if (!fromPubkey) {
-        throw new Error("User wallet not connected");
-      }
+      const fromPubkey =
+        options.fromPubkey || new PublicKey("11111111111111111111111111111111");
 
-      const toPubkey = new PublicKey(
-        process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS ||
-          "5K5oxh6yizEe3wMUxKLWVovjMUrBrqeD5tKvRPvowZxF"
-      );
+      const toPubkey = process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS
+        ? new PublicKey(process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS)
+        : new PublicKey("11111111111111111111111111111112");
 
       console.log("🔧 Creating transaction with:", {
         from: fromPubkey.toString(),
         to: toPubkey.toString(),
+        strategy: options.strategy,
       });
 
       const { blockhash, lastValidBlockHeight } =
@@ -254,9 +251,9 @@ class GatewayService {
   }
 
   async simulateGameTransaction(
-    userWallet: PublicKey | null,
     strategy: string,
-    networkCondition: NetworkCondition
+    networkCondition: NetworkCondition,
+    fromPubkey?: PublicKey
   ): Promise<{
     success: boolean;
     cost: number;
@@ -304,11 +301,16 @@ class GatewayService {
 
       const hasValidApiKey = process.env.NEXT_PUBLIC_GATEWAY_API_KEY;
 
-      if (hasValidApiKey && userWallet) {
-        const buildResult = await this.buildGatewayTransaction(
-          userWallet,
-          gatewayOptions
+      if (hasValidApiKey && fromPubkey) {
+        console.log(
+          "🔧 Attempting real Gateway transaction with user wallet:",
+          fromPubkey.toString()
         );
+
+        const buildResult = await this.buildGatewayTransaction({
+          ...gatewayOptions,
+          fromPubkey,
+        });
 
         let success;
         let signature;
@@ -325,6 +327,7 @@ class GatewayService {
           console.log("🎯 REAL Gateway transaction attempted:", {
             success,
             signature: signature?.slice(0, 20) + "...",
+            fromAddress: fromPubkey.toString(),
           });
         } else {
           type SimulatedBuildResult = {
@@ -367,8 +370,8 @@ class GatewayService {
           _networkCondition: networkCondition.congestion,
         };
       } else {
-        if (!userWallet) {
-          console.log("🔑 No user wallet connected, using simulation");
+        if (!fromPubkey) {
+          console.log("🔑 No wallet connected, using simulation");
         } else {
           console.log("🔑 No valid Gateway API key, using simulation");
         }
