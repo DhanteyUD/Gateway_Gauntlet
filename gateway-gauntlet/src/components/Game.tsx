@@ -140,7 +140,10 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     setIsSending(true);
 
     try {
+      if (!publicKey) return;
+      
       const result = await gameService.sendGameTransaction(
+        publicKey,
         strategyId,
         currentCondition
       );

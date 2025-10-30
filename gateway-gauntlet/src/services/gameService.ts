@@ -1,8 +1,10 @@
+import { PublicKey } from "@solana/web3.js";
 import { gatewayService } from "./gatewayService";
 import { NetworkCondition } from "@/types/game";
 
 export class GameService {
   async sendGameTransaction(
+    publicKey: PublicKey,
     strategyId: string,
     networkCondition: NetworkCondition
   ) {
@@ -12,6 +14,7 @@ export class GameService {
       );
 
       const result = await gatewayService.simulateGameTransaction(
+        publicKey,
         strategyId,
         networkCondition
       );

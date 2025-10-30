@@ -34,6 +34,7 @@ class GatewayService {
   }
 
   async buildGatewayTransaction(
+    userWallet: PublicKey | null,
     options: {
       strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
       jitoTip?: number;
@@ -46,8 +47,23 @@ class GatewayService {
     } = {}
   ) {
     try {
-      const fromPubkey = new PublicKey("11111111111111111111111111111111");
-      const toPubkey = new PublicKey("11111111111111111111111111111112");
+      const fromPubkey = userWallet;
+      if (!fromPubkey) {
+        throw new Error("User wallet not connected");
+      }
+
+      const toPubkey = new PublicKey(
+        process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS ||
+          "5K5oxh6yizEe3wMUxKLWVovjMUrBrqeD5tKvRPvowZxF"
+      );
+
+      console.log("🔧 Creating transaction with:", {
+        from: fromPubkey.toString(),
+        to: toPubkey.toString(),
+      });
+
+      const { blockhash, lastValidBlockHeight } =
+        await this.connection.getLatestBlockhash();
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -57,12 +73,19 @@ class GatewayService {
         })
       );
 
-      transaction.recentBlockhash = "11111111111111111111111111111111";
+      transaction.recentBlockhash = blockhash;
       transaction.feePayer = fromPubkey;
 
       const encodedTransaction = encodeTransactionToBase64(transaction);
 
       console.log("🔧 Building Gateway transaction with options:", options);
+      console.log("📦 Transaction details:", {
+        blockhash: blockhash.slice(0, 8) + "...",
+        lastValidBlockHeight,
+        from: fromPubkey.toString().slice(0, 8) + "...",
+        to: toPubkey.toString().slice(0, 8) + "...",
+        lamports: 1000,
+      });
 
       const gatewayParams: Record<string, string | boolean> = {
         encoding: "base64",
@@ -77,6 +100,7 @@ class GatewayService {
           jito: "jito",
           rpc: "rpc",
           sanctum: "sanctum-sender",
+          hybrid: "rpc",
         };
 
         const deliveryMethod = deliveryMethodMap[options.strategy];
@@ -230,6 +254,7 @@ class GatewayService {
   }
 
   async simulateGameTransaction(
+    userWallet: PublicKey | null,
     strategy: string,
     networkCondition: NetworkCondition
   ): Promise<{
@@ -279,8 +304,11 @@ class GatewayService {
 
       const hasValidApiKey = process.env.NEXT_PUBLIC_GATEWAY_API_KEY;
 
-      if (hasValidApiKey) {
-        const buildResult = await this.buildGatewayTransaction(gatewayOptions);
+      if (hasValidApiKey && userWallet) {
+        const buildResult = await this.buildGatewayTransaction(
+          userWallet,
+          gatewayOptions
+        );
 
         let success;
         let signature;
@@ -339,7 +367,11 @@ class GatewayService {
           _networkCondition: networkCondition.congestion,
         };
       } else {
-        console.log("🔑 No valid Gateway API key, using simulation");
+        if (!userWallet) {
+          console.log("🔑 No user wallet connected, using simulation");
+        } else {
+          console.log("🔑 No valid Gateway API key, using simulation");
+        }
         return this.basicSimulation(strategy, networkCondition);
       }
     } catch (error) {
