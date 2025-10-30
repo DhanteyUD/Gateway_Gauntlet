@@ -8,7 +8,11 @@
 
 **Gateway Gauntlet** is an immersive educational game that teaches developers how to optimize Solana transactions using **Sanctum Gateway**. Learn real transaction strategies through gamified simulation and master cost optimization, speed, and reliability.
 
+---
+
 ![Gateway Gauntlet Preview](https://via.placeholder.com/1200x600/1b1718/e5ff4a?text=Gateway+Gauntlet+-+Master+Solana+Transactions)
+
+---
 
 ## 🎯 What Problem Does This Solve?
 
@@ -20,6 +24,8 @@ Building on Solana requires understanding transaction delivery strategies, but:
 - ❌ **Gateway features** like Jito+RPC fallback aren't intuitive
 
 **Gateway Gauntlet solves this by providing a risk-free, engaging environment to master Solana transaction optimization.**
+
+---
 
 ## 🚀 Features
 
@@ -36,6 +42,8 @@ Building on Solana requires understanding transaction delivery strategies, but:
 - **Cost Optimization**: Jito + RPC fallback demonstration
 - **Multiple Delivery Methods**: RPC, Jito bundles, Sanctum Sender
 - **Load Balancing**: Round-robin routing concepts
+
+---
 
 ## 🕹️ How to Play
 
@@ -70,6 +78,8 @@ Building on Solana requires understanding transaction delivery strategies, but:
 - **Level Multiplier**: Score increases with mastery
 - **Failure Penalty**: `-5` points per failed transaction
 
+---
+
 ## 🛠️ Tech Stack
 
 **Frontend:**
@@ -90,6 +100,8 @@ Building on Solana requires understanding transaction delivery strategies, but:
 - ![Lucide Icons](https://img.shields.io/badge/Lucide_Icons-0.3-1b1718?style=flat-square)
 - ![Poppins Font](https://img.shields.io/badge/Poppins-Font_Google-1b1718?style=flat-square)
 
+---
+
 ## 📦 Installation
 
 ```bash
@@ -108,8 +120,26 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
+---
+
 ## 🔗 Links
 
 - [Live Demo](https://your-deployment-url.vercel.app)
 - [Sanctum Gateway](https://gateway.sanctum.so)
 - [Hackathon Submission](https://solana.com/cypherpunk-hackathon)
+
+## 📄 License
+
+MIT License - Open Source
+
+---
+
+**Built with ❤️ by [DhanteyUD](https://github.com/DhanteyUD)**
+
+*Educating Solana Developers, one gateway at a time*
+
+**⭐ Star this repo if you find it useful!**
+
+---
+
+**Powered by Sanctum Gateway**
