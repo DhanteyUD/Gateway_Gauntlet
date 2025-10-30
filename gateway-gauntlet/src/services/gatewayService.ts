@@ -41,6 +41,7 @@ class GatewayService {
       cuPriceRange?: "low" | "medium" | "high";
       jitoTipRange?: "low" | "medium" | "high" | "max";
       skipSimulation?: boolean;
+      deliveryMethodType?: "rpc" | "jito" | "sanctum-sender" | "helius-sender";
       [key: string]: string | number | boolean | undefined;
     } = {}
   ) {
@@ -63,6 +64,41 @@ class GatewayService {
 
       console.log("🔧 Building Gateway transaction with options:", options);
 
+      const gatewayParams: Record<string, string | boolean> = {
+        encoding: "base64",
+      };
+
+      if (options.skipSimulation !== undefined) {
+        gatewayParams.skipSimulation = options.skipSimulation;
+      }
+
+      if (options.strategy) {
+        const deliveryMethodMap: Record<string, string> = {
+          jito: "jito",
+          rpc: "rpc",
+          sanctum: "sanctum-sender",
+        };
+
+        const deliveryMethod = deliveryMethodMap[options.strategy];
+        if (deliveryMethod) {
+          gatewayParams.deliveryMethodType = deliveryMethod;
+        }
+      }
+
+      if (options.jitoTipRange) {
+        gatewayParams.jitoTipRange = options.jitoTipRange;
+      }
+
+      if (options.cuPriceRange) {
+        gatewayParams.cuPriceRange = options.cuPriceRange;
+      }
+
+      if (options.deliveryMethodType) {
+        gatewayParams.deliveryMethodType = options.deliveryMethodType;
+      }
+
+      console.log("📦 Gateway params being sent:", gatewayParams);
+
       const buildGatewayTransactionResponse = await fetch(
         GATEWAY_PROXY_ENDPOINT,
         {
@@ -74,16 +110,7 @@ class GatewayService {
             id: "gateway-gauntlet",
             jsonrpc: "2.0",
             method: "buildGatewayTransaction",
-            params: [
-              encodedTransaction,
-              {
-                encoding: "base64",
-                skipSimulation: options.skipSimulation !== false,
-                strategy: options.strategy,
-                jitoTipRange: options.jitoTipRange,
-                cuPriceRange: options.cuPriceRange,
-              },
-            ],
+            params: [encodedTransaction, gatewayParams],
           }),
         }
       );
@@ -103,7 +130,9 @@ class GatewayService {
 
       if (response.error) {
         console.error("Gateway build error details:", response.error);
-        throw new Error(`Gateway error: ${response.error.message}`);
+        throw new Error(
+          `Gateway error: ${response.error.message} (code: ${response.error.code})`
+        );
       }
 
       console.log("✅ Gateway transaction built successfully");
@@ -131,7 +160,12 @@ class GatewayService {
           id: "gateway-gauntlet",
           jsonrpc: "2.0",
           method: "sendTransaction",
-          params: [encodedTransaction],
+          params: [
+            encodedTransaction,
+            {
+              encoding: "base64",
+            },
+          ],
         }),
       });
 
@@ -213,15 +247,35 @@ class GatewayService {
         {
           strategy: "jito" | "rpc" | "hybrid" | "sanctum";
           jitoTipRange?: "low" | "medium" | "high" | "max";
+          cuPriceRange?: "low" | "medium" | "high";
         }
       > = {
-        safe: { strategy: "sanctum", jitoTipRange: "low" },
-        balanced: { strategy: "hybrid", jitoTipRange: "medium" },
-        fast: { strategy: "jito", jitoTipRange: "high" },
-        cheap: { strategy: "rpc", jitoTipRange: "low" },
+        safe: {
+          strategy: "sanctum",
+          jitoTipRange: "low",
+          cuPriceRange: "medium",
+        },
+        balanced: {
+          strategy: "hybrid",
+          jitoTipRange: "medium",
+          cuPriceRange: "medium",
+        },
+        fast: {
+          strategy: "jito",
+          jitoTipRange: "high",
+          cuPriceRange: "high",
+        },
+        cheap: {
+          strategy: "rpc",
+          jitoTipRange: "low",
+          cuPriceRange: "low",
+        },
       };
 
-      const gatewayOptions = strategyMap[strategy] || { strategy: "hybrid" };
+      const gatewayOptions = strategyMap[strategy] || {
+        strategy: "hybrid",
+        cuPriceRange: "medium",
+      };
 
       const hasValidApiKey = process.env.NEXT_PUBLIC_GATEWAY_API_KEY;
 
