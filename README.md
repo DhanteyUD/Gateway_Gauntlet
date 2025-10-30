@@ -106,3 +106,10 @@ cp .env.local.example .env.local
 
 # Run the development server
 npm run dev
+```
+
+## 🔗 Links
+
+- [Live Demo](https://your-deployment-url.vercel.app)
+- [Sanctum Gateway](https://gateway.sanctum.so)
+- [Hackathon Submission](https://solana.com/cypherpunk-hackathon)
