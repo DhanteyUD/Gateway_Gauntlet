@@ -13,7 +13,7 @@ import {
   Scale,
   CheckCircle2,
   Clock,
-  Lightbulb
+  Lightbulb,
 } from "lucide-react";
 
 interface StrategySelectorProps {
@@ -47,10 +47,10 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
       },
       fast: {
         icon: Zap,
-        color: "text-orange-400",
-        bgColor: "bg-orange-400/10",
-        borderColor: "border-orange-400/30",
-        gradient: "from-orange-400/20 to-orange-600/10",
+        color: "text-red-400",
+        bgColor: "bg-red-400/10",
+        borderColor: "border-red-400/30",
+        gradient: "from-red-400/20 to-red-600/10",
         label: "Maximum Speed",
       },
       cheap: {
@@ -131,7 +131,7 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
                 relative p-4 rounded-xl border backdrop-blur-sm text-left
                 bg-linear-to-br ${strategyConfig.gradient}
                 ${strategyConfig.borderColor}
-                hover:shadow-2xl hover:shadow-[#e5ff4a]/10 
+                hover:shadow-2xl hover:shadow-[#e5ff4a]/10 hover:scale-102 
                 transition-all duration-300 transform cursor-pointer
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 group overflow-hidden
@@ -162,7 +162,9 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
                   className={`flex items-center gap-1 px-2 py-1 rounded-full ${riskConfig.bgColor} ${riskConfig.borderColor} border`}
                 >
                   <RiskIcon className={`w-3 h-3 ${riskConfig.color}`} />
-                  <span className={`text-[10px] font-semibold ${riskConfig.color}`}>
+                  <span
+                    className={`text-[10px] font-semibold ${riskConfig.color}`}
+                  >
                     {strategy.risk.toUpperCase()}
                   </span>
                 </div>
@@ -227,7 +229,7 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
         <p className="text-sm text-gray-300">
           Match your strategy to network conditions. Use{" "}
           <span className="text-green-400">Safe</span> in high congestion,
-          <span className="text-orange-400"> Fast</span> for time-sensitive
+          <span className="text-red-400"> Fast</span> for time-sensitive
           transactions, and
           <span className="text-yellow-400"> Cheap</span> when the network is
           calm.

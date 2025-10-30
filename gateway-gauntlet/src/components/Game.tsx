@@ -13,6 +13,7 @@ import { GameDashboard } from "./GameDashboard";
 import { StrategySelector } from "./StrategySelector";
 import { NetworkMonitor } from "./NetworkMonitor";
 import { TransactionFeed } from "./TransactionFeed";
+import { ResultModal } from "./ResultModal";
 import { gameService } from "@/services/gameService";
 import Image from "next/image";
 import {
@@ -41,6 +42,9 @@ const TRANSACTION_HISTORY_KEY = "gateway-gauntlet-transaction-history";
 
 export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
   const { connected, publicKey } = useWallet();
+
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [lastResult, setLastResult] = useState<TransactionResult | null>(null);
 
   const loadGameState = (): GameState => {
     if (typeof window === "undefined") return getInitialGameState();
@@ -177,6 +181,9 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         resultWithTimestamp,
         ...prev.slice(0, 19),
       ]);
+
+      setLastResult(resultWithTimestamp);
+      setShowResultModal(true);
     } catch (error) {
       console.error("Transaction failed:", error);
       const failedResult: TransactionResult = {
@@ -190,6 +197,9 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         timestamp: Date.now(),
       };
       setTransactionHistory((prev) => [failedResult, ...prev.slice(0, 19)]);
+
+      setLastResult(failedResult);
+      setShowResultModal(true);
     } finally {
       setIsSending(false);
     }
@@ -234,6 +244,8 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     const newState = getInitialGameState();
     setGameState(newState);
     setTransactionHistory([]);
+    setShowResultModal(false);
+    setLastResult(null);
 
     if (typeof window !== "undefined") {
       localStorage.removeItem(GAME_STATE_KEY);
@@ -361,7 +373,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
           <div className="lg:col-span-1">
             <div
               className="h-[800px] lg:h-full lg:min-h-[600px]"
-              style={{ maxHeight: "1282px" }}
+              style={{ maxHeight: "1623px" }}
             >
               <TransactionFeed transactions={transactionHistory} />
             </div>
@@ -633,6 +645,13 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
           </div>
         )}
       </div>
+
+      <ResultModal
+        isOpen={showResultModal}
+        onClose={() => setShowResultModal(false)}
+        result={lastResult}
+        gameState={gameState}
+      />
 
       <style jsx>{`
         @keyframes gradient {
