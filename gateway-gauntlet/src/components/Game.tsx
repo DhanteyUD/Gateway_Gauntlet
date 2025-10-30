@@ -141,7 +141,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
 
     try {
       if (!publicKey) return;
-      
+
       const result = await gameService.sendGameTransaction(
         strategyId,
         currentCondition,
@@ -315,7 +315,8 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/40 rounded-xl">
                     <Zap className="w-4 h-4 text-blue-400" />
                     <span className="text-blue-400 text-sm">
-                      Real Gateway Used: {gameState.totalRealGatewayUsed} times
+                      Real Gateway Used: {gameState.totalRealGatewayUsed}{" "}
+                      {gameState.totalRealGatewayUsed <= 1 ? "time" : "times"}
                     </span>
                   </div>
                 )}
