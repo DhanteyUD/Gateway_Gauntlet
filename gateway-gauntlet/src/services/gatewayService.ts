@@ -21,6 +21,11 @@ interface NetworkCondition {
   congestion?: string | number;
 }
 
+function encodeTransactionToBase64(transaction: Transaction): string {
+  const serialized = transaction.serialize({ requireAllSignatures: false });
+  return Buffer.from(serialized).toString("base64");
+}
+
 class GatewayService {
   private connection: Connection;
 
@@ -40,38 +45,23 @@ class GatewayService {
     } = {}
   ) {
     try {
-      const fromPubkey = new PublicKey(
-        "So11111111111111111111111111111111111111112"
-      );
-      const toPubkey = new PublicKey(
-        "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-      );
+      const fromPubkey = new PublicKey("11111111111111111111111111111111");
+      const toPubkey = new PublicKey("11111111111111111111111111111112");
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
-          fromPubkey: fromPubkey,
-          toPubkey: toPubkey,
+          fromPubkey,
+          toPubkey,
           lamports: 1000,
         })
       );
 
-      const { blockhash } = await this.connection.getLatestBlockhash(
-        "confirmed"
-      );
-      transaction.recentBlockhash = blockhash;
+      transaction.recentBlockhash = "11111111111111111111111111111111";
       transaction.feePayer = fromPubkey;
 
-      const serialized = transaction.serialize({
-        requireAllSignatures: false,
-        verifySignatures: false,
-      });
-      const encodedTransaction = Buffer.from(serialized).toString("base64");
+      const encodedTransaction = encodeTransactionToBase64(transaction);
 
-      console.log("🔧 Building Gateway transaction:", {
-        strategy: options.strategy,
-        transactionLength: encodedTransaction.length,
-        blockhash: blockhash.slice(0, 8) + "...",
-      });
+      console.log("🔧 Building Gateway transaction with options:", options);
 
       const buildGatewayTransactionResponse = await fetch(
         GATEWAY_PROXY_ENDPOINT,
@@ -81,19 +71,17 @@ class GatewayService {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            id: "gateway-gauntlet",
+            jsonrpc: "2.0",
             method: "buildGatewayTransaction",
             params: [
               encodedTransaction,
               {
                 encoding: "base64",
-                skipSimulation: options.skipSimulation ?? true,
-                strategy: options.strategy || "hybrid",
-                jitoTip: options.jitoTip,
+                skipSimulation: options.skipSimulation !== false,
+                strategy: options.strategy,
                 jitoTipRange: options.jitoTipRange,
-                cuPriceRange: options.cuPriceRange || "medium",
-                ...Object.fromEntries(
-                  Object.entries(options).filter(([_, v]) => v !== undefined)
-                ),
+                cuPriceRange: options.cuPriceRange,
               },
             ],
           }),
@@ -114,10 +102,8 @@ class GatewayService {
       const response = await buildGatewayTransactionResponse.json();
 
       if (response.error) {
-        console.error("❌ Gateway API error:", response.error);
-        throw new Error(
-          `Gateway error: ${response.error.message} (code: ${response.error.code})`
-        );
+        console.error("Gateway build error details:", response.error);
+        throw new Error(`Gateway error: ${response.error.message}`);
       }
 
       console.log("✅ Gateway transaction built successfully");
@@ -142,6 +128,8 @@ class GatewayService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          id: "gateway-gauntlet",
+          jsonrpc: "2.0",
           method: "sendTransaction",
           params: [encodedTransaction],
         }),
@@ -207,33 +195,6 @@ class GatewayService {
     };
   }
 
-  async checkGatewayHealth(): Promise<boolean> {
-    try {
-      const response = await fetch(GATEWAY_PROXY_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          method: "getHealth",
-          params: [],
-        }),
-      });
-
-      if (!response.ok) {
-        console.log("🔧 Gateway health check failed:", response.status);
-        return false;
-      }
-
-      const data = await response.json();
-      console.log("🔧 Gateway health:", data);
-      return !data.error;
-    } catch (error) {
-      console.log("🔧 Gateway health check error:", error);
-      return false;
-    }
-  }
-
   async simulateGameTransaction(
     strategy: string,
     networkCondition: NetworkCondition
@@ -247,13 +208,6 @@ class GatewayService {
     _networkCondition: string | number | undefined;
   }> {
     try {
-      const isHealthy = await this.checkGatewayHealth();
-
-      if (!isHealthy) {
-        console.log("🔧 Gateway not healthy, using simulation");
-        return this.basicSimulation(strategy, networkCondition);
-      }
-
       const strategyMap: Record<
         string,
         {
