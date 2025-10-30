@@ -182,7 +182,7 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
                         tx.success ? "text-green-400" : "text-red-400"
                       }`}
                     >
-                      {tx.success ? "YAY" : "UH-OH"}
+                      {tx.success ? "SUCCESS" : "FAILED"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
