@@ -67,7 +67,11 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     try {
       const saved = localStorage.getItem(TRANSACTION_HISTORY_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const transactions = JSON.parse(saved);
+        return transactions.map((tx: TransactionResult) => ({
+          ...tx,
+          timestamp: tx.timestamp || Date.now(),
+        }));
       }
     } catch (error) {
       console.error("Error loading transaction history:", error);
@@ -141,14 +145,17 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         currentCondition
       );
 
-      const resultWithTimestamp = {
+      const resultWithTimestamp: TransactionResult = {
         ...result,
         timestamp: Date.now(),
+        networkCondition: String(
+          result.networkCondition ?? currentCondition.congestion
+        ),
       };
 
       const newScore =
         gameState.score +
-        calculateScore(result, result.success, result.realGateway);
+        calculateScore(resultWithTimestamp, result.success, result.realGateway);
       const newLevel = calculateLevel(newScore);
 
       setGameState((prev) => ({
@@ -176,7 +183,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
         strategyUsed: strategyId,
         error: error instanceof Error ? error.message : "Unknown error",
         realGateway: false,
-        networkCondition: currentCondition.congestion,
+        networkCondition: String(currentCondition.congestion),
         timestamp: Date.now(),
       };
       setTransactionHistory((prev) => [failedResult, ...prev.slice(0, 19)]);
@@ -193,14 +200,31 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     let score = 0;
     if (success) {
       score += SCORING_RULES.SUCCESS_BONUS;
-      score += (1 / result.cost) * SCORING_RULES.COST_EFFICIENCY_MULTIPLIER;
-      score += Math.max(0, SCORING_RULES.SPEED_BONUS - result.latency / 100);
+
+      const costEfficiency = Math.min(
+        SCORING_RULES.MAX_COST_EFFICIENCY,
+        (0.001 / result.cost) * SCORING_RULES.COST_EFFICIENCY_MULTIPLIER
+      );
+      score += costEfficiency;
+
+      const speedBonus = Math.max(
+        0,
+        SCORING_RULES.SPEED_BONUS - result.latency / 50
+      );
+      score += speedBonus;
 
       if (realGateway) {
         score += SCORING_RULES.REAL_GATEWAY_BONUS;
       }
+
+      score *= 1 + (gameState.currentLevel - 1) * 0.1;
+
+      score = Math.min(score, SCORING_RULES.MAX_SCORE_PER_TRANSACTION);
+    } else {
+      score = -5;
     }
-    return score * SCORING_RULES.LEVEL_MULTIPLIER * gameState.currentLevel;
+
+    return Math.round(score);
   };
 
   const resetGame = () => {

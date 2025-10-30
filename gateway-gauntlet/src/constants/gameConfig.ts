@@ -1,4 +1,3 @@
-// constants/gameConfig.ts
 import { GameStrategy, NetworkCondition } from "@/types/game";
 
 export const GAME_STRATEGIES: GameStrategy[] = [
@@ -84,11 +83,11 @@ export const NETWORK_CONDITIONS: NetworkCondition[] = [
 ];
 
 export const SCORING_RULES = {
-  SUCCESS_BONUS: 50,         
-  COST_EFFICIENCY_MULTIPLIER: 1000, 
-  SPEED_BONUS: 25,            
-  LEVEL_MULTIPLIER: 1.2,    
-  REAL_GATEWAY_BONUS: 10,     
-  MAX_COST_EFFICIENCY: 1000,  
-  MAX_SCORE_PER_TRANSACTION: 200 
+  SUCCESS_BONUS: 50,
+  COST_EFFICIENCY_MULTIPLIER: 1000,
+  SPEED_BONUS: 25,
+  LEVEL_MULTIPLIER: 1.2,
+  REAL_GATEWAY_BONUS: 10,
+  MAX_COST_EFFICIENCY: 1000,
+  MAX_SCORE_PER_TRANSACTION: 100,
 };
