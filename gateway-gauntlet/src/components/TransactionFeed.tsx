@@ -63,11 +63,11 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
     <div className="bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-6 shadow-2xl shadow-[#e5ff4a]/10 h-full flex flex-col">
       <div className="flex flex-col items-start justify-between mb-6 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-xl flex items-center justify-center">
-            <BadgeDollarSign className="w-5 h-5 text-[#1b1718]" />
+          <div className="w-10 h-10 bg-[#e5ff4a]/10 rounded-xl flex items-center justify-center">
+            <BadgeDollarSign className="w-5 h-5 text-[#e5ff4a]" />
           </div>
           <div>
-            <h2 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold text-white">
               Transaction Feed
             </h2>
             <p className="text-gray-400 text-sm">Live transaction monitoring</p>
