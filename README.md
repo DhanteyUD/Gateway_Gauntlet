@@ -10,7 +10,8 @@ Gateway Gauntlet is an immersive educational game that teaches developers how to
 
 ---
 
-![Gateway Gauntlet Preview](https://via.placeholder.com/1200x600/1b1718/e5ff4a?text=Gateway+Gauntlet+-+Master+Solana+Transactions)
+<img width="1439" height="778" alt="Gateway Gauntlet" src="https://github.com/user-attachments/assets/09060ed9-5d32-47bd-a24a-1f46e4a4abdd" />
+
 
 ---
 
