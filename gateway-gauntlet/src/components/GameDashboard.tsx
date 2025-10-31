@@ -12,7 +12,7 @@ import {
   Swords,
   UserStar,
   Bot,
-  Castle
+  Castle,
 } from "lucide-react";
 
 interface GameDashboardProps {
@@ -39,7 +39,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
     gameState.transactionsAttempted > 0
       ? (gameState.transactionsSuccessful / gameState.transactionsAttempted) *
         100
-      : 50;
+      : 0;
 
   const calculateLevel = (score: number): number => {
     return Math.floor(score / 1000) + 1;

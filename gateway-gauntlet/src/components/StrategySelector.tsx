@@ -209,7 +209,7 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#e5ff4a]" />
               <span className="text-[#e5ff4a] font-medium">
-                Processing Transaction...
+                Executing Strike...
               </span>
             </div>
           </div>

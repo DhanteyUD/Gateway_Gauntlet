@@ -10,7 +10,6 @@ import {
   Clock,
   DollarSign,
   Shield,
-  TrendingUp,
   BarChart3,
   ExternalLink,
   Scale,
@@ -65,8 +64,8 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             <div>
               <h2 className="text-xl font-bold text-white">
                 {result.success
-                  ? "Transaction Successful!"
-                  : "Transaction Failed"}
+                  ? "Mission Accomplished"
+                  : "Mission Failed"}
               </h2>
               <p className="text-sm text-gray-400">
                 {result.success
@@ -222,7 +221,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             onClick={onClose}
             className="flex-1 py-3 px-4 bg-[#e5ff4a] text-[#1b1718] font-bold rounded-xl hover:bg-[#ffd700] transition-all duration-300 cursor-pointer"
           >
-            Continue Playing
+            Launch New Assault
           </button>
         </div>
       </div>
