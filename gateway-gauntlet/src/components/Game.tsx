@@ -376,7 +376,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
           <div className="lg:col-span-1">
             <div
               className="h-[800px] lg:h-full lg:min-h-[600px]"
-              style={{ maxHeight: "1623px" }}
+              style={{ maxHeight: "1760px" }}
             >
               <TransactionFeed transactions={transactionHistory} />
             </div>
