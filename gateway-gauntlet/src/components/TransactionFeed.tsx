@@ -67,9 +67,7 @@ export const TransactionFeed: React.FC<TransactionFeedProps> = ({
             <BadgeDollarSign className="w-5 h-5 text-[#e5ff4a]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">
-              Transaction Feed
-            </h2>
+            <h2 className="text-xl font-bold text-white">Battle Log</h2>
             <p className="text-gray-400 text-sm">Live transaction monitoring</p>
           </div>
         </div>

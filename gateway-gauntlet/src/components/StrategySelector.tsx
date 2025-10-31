@@ -108,9 +108,7 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
           <Crown className="w-5 h-5 text-[#e5ff4a]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">
-            Transaction Strategies
-          </h2>
+          <h2 className="text-xl font-bold text-white">Battle Strategies</h2>
           <p className="text-sm text-gray-400">Choose your Gateway approach</p>
         </div>
       </div>

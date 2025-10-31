@@ -65,7 +65,7 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
           <Wifi className="w-5 h-5 text-[#e5ff4a]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">Network Status</h2>
+          <h2 className="text-xl font-bold text-white">Battlefield Intelligence</h2>
           <p className="text-sm text-gray-400">Live Solana conditions</p>
         </div>
       </div>

@@ -395,7 +395,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
             <div className="flex items-center justify-between w-full">
               <div>
                 <h3 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
-                  Gateway Integration
+                  Battle Engine
                 </h3>
                 <p className="text-gray-400 text-sm mt-1">
                   Real-time Sanctum Gateway API Status

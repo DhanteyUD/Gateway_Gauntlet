@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React from "react";
@@ -8,8 +9,10 @@ import {
   Zap,
   TrendingUp,
   Cpu,
-  Gamepad2,
   Swords,
+  UserStar,
+  Bot,
+  Castle
 } from "lucide-react";
 
 interface GameDashboardProps {
@@ -68,11 +71,11 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
     <div className="bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-6 shadow-2xl shadow-[#e5ff4a]/10">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-xl flex items-center justify-center">
-          <Gamepad2 className="w-5 h-5 text-[#1b1718]" />
+          <Castle className="w-5 h-5 text-[#1b1718]" />
         </div>
         <div>
           <h2 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
-            Game Dashboard
+            Battle Station
           </h2>
           <p className="text-gray-400 text-sm">Real-time performance metrics</p>
         </div>
@@ -187,18 +190,32 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
             <div className="flex items-center gap-2">
               <Swords className="w-4 h-4 text-[#e5ff4a]" />
               <span className="text-gray-300 font-semibold">
-                Win/Loss Battle
+                Mission Control
               </span>
             </div>
 
-            {/* Convert below to quote/winning tip */}
-            <div className="text-sm text-gray-400">
-              Level{" "}
-              <span className="text-[#e5ff4a] font-bold">{currentLevel}</span> •
-              Next:{" "}
-              <span className="text-[#e5ff4a] font-bold">
-                {nextLevelScore} points
-              </span>
+            <div className="text-xs text-gray-400">
+              {balancedPosition >= 70 ? (
+                <span className="text-green-400">
+                  🔥 "Dominating the battlefield!" - Keep crushing it!
+                </span>
+              ) : balancedPosition >= 55 ? (
+                <span className="text-[#e5ff4a]">
+                  💪 "Winning streak active!" - Maintain your edge!
+                </span>
+              ) : balancedPosition >= 45 ? (
+                <span className="text-yellow-400">
+                  ⚔️ "Balanced combat!" - Push for victory!
+                </span>
+              ) : balancedPosition >= 30 ? (
+                <span className="text-orange-400">
+                  🎯 "Fight back harder!" - Turn the tide!
+                </span>
+              ) : (
+                <span className="text-red-400">
+                  🛡️ "Never surrender!" - Comeback starts now!
+                </span>
+              )}
             </div>
           </div>
 
@@ -247,8 +264,9 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
             <div className="flex justify-between items-center mt-3 text-xs font-bold">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
-                <span className="text-green-400">
-                  WINS: {gameState.transactionsSuccessful}
+                <span className="flex gap-2 items-center text-green-400">
+                  <p> PLAYER: {gameState.transactionsSuccessful}</p>
+                  <UserStar size={16} />
                 </span>
               </div>
               <div className="text-gray-400">
@@ -259,10 +277,13 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
                   : "⚔️ Losing"}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-red-400">
-                  LOSSES:{" "}
-                  {gameState.transactionsAttempted -
-                    gameState.transactionsSuccessful}
+                <span className="flex gap-2 items-center text-red-400">
+                  <Bot size={16} />{" "}
+                  <p>
+                    SYSTEM:{" "}
+                    {gameState.transactionsAttempted -
+                      gameState.transactionsSuccessful}
+                  </p>
                 </span>
                 <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
               </div>
@@ -279,16 +300,16 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
           <div className="text-xs text-gray-400">Wins</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-red-400">
-            {gameState.transactionsAttempted - gameState.transactionsSuccessful}
-          </div>
-          <div className="text-xs text-gray-400">Losses</div>
-        </div>
-        <div className="text-center">
           <div className="text-lg font-bold text-yellow-400">
             {gameState.totalCost.toFixed(4)}
           </div>
           <div className="text-xs text-gray-400">SOL Spent</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold text-red-400">
+            {gameState.transactionsAttempted - gameState.transactionsSuccessful}
+          </div>
+          <div className="text-xs text-gray-400">Losses</div>
         </div>
       </div>
     </div>
