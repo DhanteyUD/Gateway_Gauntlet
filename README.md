@@ -205,7 +205,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Live Demo** - [Gateway Gauntlet](https://your-deployment-url.vercel.app)
 - **Sanctum Gateway** - [gateway.sanctum.so](https://gateway.sanctum.so)
-- **Hackathon Submission** - [View Submission](#)
+- **Hackathon Submission** - [View Submission](https://youtu.be/9X4c7Fmq9Rc)
 
 ---
 
