@@ -10,7 +10,7 @@ Gateway Gauntlet is an immersive educational game that teaches developers how to
 
 ---
 
-<img width="1439" height="778" alt="Gateway Gauntlet" src="https://github.com/user-attachments/assets/09060ed9-5d32-47bd-a24a-1f46e4a4abdd" />
+<img width="1268" height="958" alt="Gateway Gauntlet" src="https://github.com/user-attachments/assets/ba326401-e5a4-4ddc-a90f-2b59bacfd751" />
 
 ---
 
