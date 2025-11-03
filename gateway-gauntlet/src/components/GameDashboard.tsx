@@ -70,23 +70,27 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
   return (
     <div className="bg-linear-to-br from-black/60 to-[#1b1718]/80 backdrop-blur-xl border border-[#e5ff4a]/30 rounded-3xl p-6 shadow-2xl shadow-[#e5ff4a]/10">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-linear-to-br from-[#e5ff4a] to-[#ffd700] rounded-lg md:rounded-xl flex items-center justify-center">
           <Castle className="w-5 h-5 text-[#1b1718]" />
         </div>
         <div>
-          <h2 className="text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
+          <h2 className="text-base md:text-2xl font-black bg-linear-to-r from-[#e5ff4a] to-[#ffd700] bg-clip-text text-transparent">
             Battle Station
           </h2>
-          <p className="text-gray-400 text-sm">Real-time performance metrics</p>
+          <p className="text-gray-400 text-[10px] md:text-sm">
+            Real-time performance metrics
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-6">
         <div className="bg-black/40 flex flex-col justify-between rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-[#e5ff4a]" />
-              <span className="text-gray-400 text-xs font-semibold">SCORE</span>
+              <span className="text-gray-400 text-[10px] md:text-xs font-semibold">
+                SCORE
+              </span>
             </div>
             <div
               className="text-2xl font-black text-[#e5ff4a] truncate"
@@ -97,14 +101,16 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               {formatScore(gameState.score)}
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-5">Total points</div>
+          <div className="text-[10px] md:text-xs text-gray-400 mt-5">
+            Total points
+          </div>
         </div>
 
         <div className="bg-black/40 flex flex-col justify-between rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-4 h-4 text-blue-400" />
-              <span className="text-gray-400 text-xs font-semibold">
+              <span className="text-gray-400 text-[10px] md:text-xs font-semibold">
                 SUCCESS RATE
               </span>
             </div>
@@ -112,7 +118,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               {successRate.toFixed(1)}%
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-5">
+          <div className="text-[10px] md:text-xs text-gray-400 mt-5">
             {gameState.transactionsSuccessful}/{gameState.transactionsAttempted}{" "}
             successful
           </div>
@@ -122,7 +128,7 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Send className="w-4 h-4 text-green-400" />
-              <span className="text-gray-400 text-xs font-semibold">
+              <span className="text-gray-400 text-[10px] md:text-xs font-semibold">
                 TRANSACTIONS
               </span>
             </div>
@@ -132,14 +138,16 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               )}
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-5">Total attempts</div>
+          <div className="text-[10px] md:text-xs text-gray-400 mt-5">
+            Total attempts
+          </div>
         </div>
 
         <div className="bg-black/40 flex flex-col justify-between rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 group">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Cpu className="w-4 h-4 text-purple-400" />
-              <span className="text-gray-400 text-xs font-semibold">
+              <span className="text-gray-400 text-[10px] md:text-xs font-semibold">
                 REAL GATEWAY
               </span>
             </div>
@@ -147,7 +155,9 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               {gameState.totalRealGatewayUsed || 0}
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-5">API calls</div>
+          <div className="text-[10px] md:text-xs text-gray-400 mt-5">
+            API calls
+          </div>
         </div>
       </div>
 
@@ -156,12 +166,12 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-[#e5ff4a]" />
-              <span className="text-gray-300 font-semibold">
+              <span className="text-gray-300 text-xs md:text-base font-semibold">
                 Level Progress
               </span>
             </div>
 
-            <div className="text-sm text-gray-400">
+            <div className="text-[10px] md:text-xs text-gray-400">
               Level{" "}
               <span className="text-[#e5ff4a] font-bold">{currentLevel}</span> •
               Next:{" "}
@@ -186,33 +196,33 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
         </div>
 
         <div className="bg-black/40 rounded-2xl p-4 border border-[#e5ff4a]/20">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-3 gap-3">
             <div className="flex items-center gap-2">
               <Swords className="w-4 h-4 text-[#e5ff4a]" />
-              <span className="text-gray-300 font-semibold">
+              <span className="text-gray-300 text-xs md:text-base font-semibold">
                 Mission Control
               </span>
             </div>
 
-            <div className="text-xs text-gray-400">
+            <div className="text-[10px] text-gray-400">
               {balancedPosition >= 70 ? (
-                <span className="text-green-400">
+                <span className="text-green-400 text-[10px]">
                   🔥 "Dominating the battlefield!" - Keep crushing it!
                 </span>
               ) : balancedPosition >= 55 ? (
-                <span className="text-[#e5ff4a]">
+                <span className="text-[#e5ff4a] text-[10px]">
                   💪 "Winning streak active!" - Maintain your edge!
                 </span>
               ) : balancedPosition >= 45 ? (
-                <span className="text-yellow-400">
+                <span className="text-yellow-400 text-[10px]">
                   ⚔️ "Balanced combat!" - Push for victory!
                 </span>
               ) : balancedPosition >= 30 ? (
-                <span className="text-orange-400">
+                <span className="text-orange-400 text-[10px]">
                   🎯 "Fight back harder!" - Turn the tide!
                 </span>
               ) : (
-                <span className="text-red-400">
+                <span className="text-red-400 text-[10px]">
                   🛡️ "Never surrender!" - Comeback starts now!
                 </span>
               )}
@@ -263,13 +273,16 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
 
             <div className="flex justify-between items-center mt-3 text-xs font-bold">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
+                <div className="w-2 md:w-3 h-2 md:h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
                 <span className="flex gap-2 items-center text-green-400">
-                  <p> PLAYER: {gameState.transactionsSuccessful}</p>
+                  <p className="hidden md:block">
+                    {" "}
+                    PLAYER: {gameState.transactionsSuccessful}
+                  </p>
                   <UserStar size={16} />
                 </span>
               </div>
-              <div className="text-gray-400">
+              <div className="text-gray-400 text-[10px] md:text-base">
                 {gameState.transactionsAttempted === 0
                   ? "⚡ Ready to Battle!"
                   : successRate >= 50
@@ -279,13 +292,13 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
               <div className="flex items-center gap-2">
                 <span className="flex gap-2 items-center text-red-400">
                   <Bot size={16} />{" "}
-                  <p>
+                  <p className="hidden md:block">
                     SYSTEM:{" "}
                     {gameState.transactionsAttempted -
                       gameState.transactionsSuccessful}
                   </p>
                 </span>
-                <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
+                <div className="w-2 md:w-3 h-2 md:h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
               </div>
             </div>
           </div>
@@ -297,19 +310,19 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ gameState }) => {
           <div className="text-lg font-bold text-green-400">
             {gameState.transactionsSuccessful}
           </div>
-          <div className="text-xs text-gray-400">Wins</div>
+          <div className="text-[10px] md:text-xs text-gray-400">Wins</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-bold text-yellow-400">
             {gameState.totalCost.toFixed(4)}
           </div>
-          <div className="text-xs text-gray-400">SOL Spent</div>
+          <div className="text-[10px] md:text-xs text-gray-400">SOL Spent</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-bold text-red-400">
             {gameState.transactionsAttempted - gameState.transactionsSuccessful}
           </div>
-          <div className="text-xs text-gray-400">Losses</div>
+          <div className="text-[10px] md:text-xs text-gray-400">Losses</div>
         </div>
       </div>
     </div>
