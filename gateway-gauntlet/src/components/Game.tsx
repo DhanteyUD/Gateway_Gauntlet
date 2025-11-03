@@ -261,7 +261,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#1b1718] text-white p-8 font-poppins">
+    <div className="min-h-screen bg-[#1b1718] text-white p-4 md:p-8 font-poppins">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#e5ff4a]/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#e5ff4a]/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -270,7 +270,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
 
       <div className="max-w-6xl mx-auto relative z-10">
         <header className="text-center mb-12">
-          <div className="relative flex justify-between items-start mb-6">
+          <div className="relative flex justify-between items-start mb-6 mt-8 md:mt-0">
             <div className="flex-1 text-center mb-2">
               <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-[#e5ff4a]/10 border border-[#e5ff4a]/30 rounded-2xl backdrop-blur-sm">
                 <span className="text-[#e5ff4a] text-sm font-semibold tracking-wide uppercase">
@@ -294,7 +294,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
                 </span>
               </h1>
 
-              <div className="flex items-center justify-center gap-4 text-gray-300 mb-4">
+              <div className="hidden md:flex items-center justify-center gap-4 text-gray-300 mb-4">
                 <div className="flex items-center gap-2">
                   <Play className="w-4 h-4 text-[#e5ff4a]" />
                   <span>Live Gateway Simulation</span>
@@ -338,7 +338,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
               </div>
             </div>
 
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 hidden md:block">
               {connected ? (
                 <WalletMultiButton />
               ) : (
@@ -356,15 +356,15 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5">
+            <div className="md:bg-black/40 backdrop-blur-lg md:border border-[#e5ff4a]/20 rounded-2xl p-0 md:p-6 shadow-2xl shadow-[#e5ff4a]/5">
               <GameDashboard gameState={gameState} />
             </div>
 
-            <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5">
+            <div className="md:bg-black/40 backdrop-blur-lg md:border border-[#e5ff4a]/20 rounded-2xl p-0 md:p-6 shadow-2xl shadow-[#e5ff4a]/5">
               <NetworkMonitor condition={currentCondition} />
             </div>
 
-            <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5">
+            <div className="md:bg-black/40 backdrop-blur-lg md:border border-[#e5ff4a]/20 rounded-2xl p-0 md:p-6 shadow-2xl shadow-[#e5ff4a]/5">
               <StrategySelector
                 strategies={GAME_STRATEGIES}
                 onStrategySelect={sendTransaction}

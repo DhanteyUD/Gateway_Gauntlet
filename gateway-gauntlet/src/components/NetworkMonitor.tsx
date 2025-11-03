@@ -61,12 +61,12 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
   return (
     <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5 hover:border-[#e5ff4a]/30 transition-all duration-300">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-[#e5ff4a]/10 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-[#e5ff4a]/10 rounded-lg md:rounded-xl flex items-center justify-center">
           <Wifi className="w-5 h-5 text-[#e5ff4a]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">Battlefield Intelligence</h2>
-          <p className="text-sm text-gray-400">Live Solana conditions</p>
+          <h2 className="text-base md:text-xl font-bold text-white">Battlefield Intelligence</h2>
+          <p className="text-[10px] md:text-sm text-gray-400">Live Solana conditions</p>
         </div>
       </div>
 
@@ -75,17 +75,17 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-2xl">{config.icon}</div>
+            <div className="text-xl md:text-2xl">{config.icon}</div>
             <div>
-              <p className="text-sm text-gray-300">Congestion</p>
-              <p className={`text-lg font-bold ${config.color}`}>
+              <p className="text-xs md:text-sm text-gray-300">Congestion</p>
+              <p className={`text-base md:text-lg font-bold ${config.color}`}>
                 {config.label}
               </p>
             </div>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-400">Level</p>
-            <p className={`text-sm font-semibold ${config.color}`}>
+            <p className={`text-xs md:text-sm font-semibold ${config.color}`}>
               {condition.congestion.toUpperCase()}
             </p>
           </div>
