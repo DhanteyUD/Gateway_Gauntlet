@@ -306,7 +306,7 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-2">
                 {connected && publicKey && (
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/40 rounded-xl">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

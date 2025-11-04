@@ -51,7 +51,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-[#e5ff4a]/20">
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              className={`w-10 h-10 rounded-lg md:rounded-xl flex items-center justify-center ${
                 result.success ? "bg-green-400/10" : "bg-red-400/10"
               }`}
             >
@@ -62,12 +62,12 @@ export const ResultModal: React.FC<ResultModalProps> = ({
               )}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-base md:text-xl font-bold text-white">
                 {result.success
                   ? "Mission Accomplished"
                   : "Mission Failed"}
               </h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs md:text-sm text-gray-400">
                 {result.success
                   ? "Your transaction landed successfully"
                   : "Transaction did not complete"}
@@ -107,9 +107,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                     })()}
                   </div>
                 </div>
-                <span className="text-gray-400">Strategy</span>
+                <span className="text-xs md:text-base text-gray-400">Strategy</span>
               </div>
-              <span className="font-semibold text-white capitalize">
+              <span className="text-sm md:text-base font-semibold text-white capitalize">
                 {result.strategyUsed}
               </span>
             </div>
@@ -119,9 +119,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 <div className="w-8 h-8 bg-yellow-400/10 rounded-lg flex items-center justify-center">
                   <DollarSign className="w-4 h-4 text-yellow-400" />
                 </div>
-                <span className="text-gray-400">Cost</span>
+                <span className="text-xs md:text-base text-gray-400">Cost</span>
               </div>
-              <span className="font-semibold text-yellow-400">
+              <span className="text-sm md:text-base font-semibold text-yellow-400">
                 {result.cost.toFixed(6)} SOL
               </span>
             </div>
@@ -131,9 +131,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 <div className="w-8 h-8 bg-purple-400/10 rounded-lg flex items-center justify-center">
                   <Clock className="w-4 h-4 text-purple-400" />
                 </div>
-                <span className="text-gray-400">Latency</span>
+                <span className="text-xs md:text-base text-gray-400">Latency</span>
               </div>
-              <span className="font-semibold text-purple-400">
+              <span className="text-sm md:text-base font-semibold text-purple-400">
                 {result.latency.toFixed(0)}ms
               </span>
             </div>
@@ -145,9 +145,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 <div className="w-8 h-8 bg-green-400/20 rounded-lg flex items-center justify-center">
                   <Zap className="w-4 h-4 text-green-400" />
                 </div>
-                <span className="text-gray-400">Gateway</span>
+                <span className="text-xs md:text-base text-gray-400">Gateway</span>
               </div>
-              <span className="font-semibold text-green-400">
+              <span className="text-sm md:text-base font-semibold text-green-400">
                 Real Gateway Used
               </span>
             </div>
@@ -157,7 +157,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             <div className="p-3 bg-black/40 rounded-xl border border-gray-700/50">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-gray-400">Transaction ID</span>
+                <span className="text-xs md:text-sm text-gray-400">Transaction ID</span>
               </div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs text-gray-300 font-mono bg-black/30 px-2 py-1 rounded truncate">
@@ -219,7 +219,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
         <div className="flex gap-3 p-6 border-t border-[#e5ff4a]/20">
           <button
             onClick={onClose}
-            className="flex-1 py-3 px-4 bg-[#e5ff4a] text-[#1b1718] font-bold rounded-xl hover:bg-[#ffd700] transition-all duration-300 cursor-pointer"
+            className="flex-1 py-3 px-4 bg-[#e5ff4a] text-sm md:text-base text-[#1b1718] font-bold rounded-xl hover:bg-[#ffd700] transition-all duration-300 cursor-pointer"
           >
             Launch New Assault
           </button>

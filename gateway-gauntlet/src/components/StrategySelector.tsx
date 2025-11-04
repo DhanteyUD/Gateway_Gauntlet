@@ -104,12 +104,12 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
   return (
     <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-[#e5ff4a]/10 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-[#e5ff4a]/10 rounded-lg md:rounded-xl flex items-center justify-center">
           <Crown className="w-5 h-5 text-[#e5ff4a]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">Battle Strategies</h2>
-          <p className="text-sm text-gray-400">Choose your Gateway approach</p>
+          <h2 className="text-base md:text-xl font-bold text-white">Battle Strategies</h2>
+          <p className="text-[10px] md:text-sm text-gray-400">Choose your Gateway approach</p>
         </div>
       </div>
 
@@ -208,12 +208,12 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#e5ff4a]" />
-              <span className="text-[#e5ff4a] font-medium">
+              <span className="text-sm md:text-base text-[#e5ff4a] font-medium">
                 Executing Strike...
               </span>
             </div>
           </div>
-          <p className="text-center text-sm text-gray-400 mt-2">
+          <p className="text-center text-xs md:text-sm text-gray-400 mt-2">
             Using Sanctum Gateway for optimal delivery
           </p>
         </div>
@@ -224,7 +224,7 @@ export const StrategySelector: React.FC<StrategySelectorProps> = ({
           <Lightbulb className="w-4 h-4 text-[#e5ff4a]" />
           <span className="text-sm font-medium text-[#e5ff4a]">Pro Tip</span>
         </div>
-        <p className="text-sm text-gray-300">
+        <p className="text-xs md:text-sm text-gray-300">
           Match your strategy to network conditions. Use{" "}
           <span className="text-green-400">Safe</span> in high congestion,
           <span className="text-red-400"> Fast</span> for time-sensitive
