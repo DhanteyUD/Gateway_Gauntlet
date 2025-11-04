@@ -96,12 +96,12 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
         <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-gray-400 font-medium">
+            <span className="text-[10px] md:text-xs text-gray-400 font-medium">
               Success Rate
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-green-400">
+            <span className="text-xl md:text-2xl font-bold text-green-400">
               {condition.successRate}%
             </span>
           </div>
@@ -116,17 +116,17 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
         <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-gray-400 font-medium">
+            <span className="text-[10px] md:text-xs text-gray-400 font-medium">
               Avg Latency
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-purple-400">
+            <span className="text-xl md:text-2xl font-bold text-purple-400">
               {condition.averageLatency}
             </span>
-            <span className="text-sm text-gray-400">ms</span>
+            <span className="text-xs md:text-sm text-gray-400">ms</span>
           </div>
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-[10px] md:text-xs text-gray-500 mt-1">
             {condition.averageLatency < 300
               ? "Fast"
               : condition.averageLatency < 800
@@ -140,10 +140,10 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
         <div className="flex items-start gap-3">
           <AlertCircle className="w-4 h-4 text-[#e5ff4a] mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-[#e5ff4a] mb-1">
+            <p className="text-[10px] md:text-xs font-medium text-[#e5ff4a] mb-1">
               Network Advisory
             </p>
-            <p className="text-sm text-gray-300 leading-relaxed">
+            <p className="text-[10px] md:text-xs text-gray-300 leading-relaxed">
               {condition.description}
             </p>
           </div>
@@ -151,8 +151,8 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
       </div>
 
       <div className="flex items-center gap-2 mt-4 justify-end">
-        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-        <span className="text-xs text-gray-400">Live updates every 30s</span>
+        <div className="w-1 md:w-2 h-1 md:h-2 bg-green-400 rounded-full animate-pulse"></div>
+        <span className="text-[10px] md:text-xs text-gray-400">Live updates every 30s</span>
       </div>
     </div>
   );
