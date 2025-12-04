@@ -9,16 +9,22 @@ const poppins = Poppins({
   display: "swap",
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export const themeColor = "#e5ff4a";
+
 export const metadata = {
   title: "Gateway Gauntlet - Sanctum Hackathon",
   description: "Master Solana transaction delivery with Sanctum Gateway",
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-  manifest: '/manifest.json',
-  themeColor: '#e5ff4a',
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
-    title: 'Gateway Gauntlet',
+    statusBarStyle: "default",
+    title: "Gateway Gauntlet",
   },
 };
 
