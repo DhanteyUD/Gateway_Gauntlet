@@ -3,7 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { Wallet, Coins, RefreshCw, ExternalLink } from "lucide-react";
+import {
+  Wallet,
+  Coins,
+  RefreshCw,
+  ExternalLink,
+  DollarSign,
+} from "lucide-react";
 import Image from "next/image";
 
 const formatNumberWithCommas = (num: number): string => {
@@ -27,33 +33,26 @@ export const WalletBalance: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [balanceInUSD, setBalanceInUSD] = useState<number>(0);
   const [solPrice, setSolPrice] = useState<number>(0);
-
-  const fetchBalance = async () => {
-    if (!connected || !publicKey) return;
-
-    setLoading(true);
-    try {
-      const solBalance = await connection.getBalance(publicKey);
-      const solBalanceInSOL = solBalance / 1_000_000_000;
-      setBalance(solBalanceInSOL);
-
-      setBalanceInUSD(solBalanceInSOL * solPrice);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-      setBalance(0);
-      setBalanceInUSD(0);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [usdLoading, setUsdLoading] = useState<boolean>(false);
 
   const fetchSOLPrice = async (): Promise<number> => {
     try {
       const response = await fetch(
         "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
       );
+
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status}`);
+      }
+
       const data = await response.json();
-      const price = data.solana.usd;
+      const price = data.solana?.usd;
+
+      if (!price) {
+        throw new Error("SOL price not found in response");
+      }
+
+      console.log("Fetched SOL price:", price);
       setSolPrice(price);
       return price;
     } catch (error) {
@@ -64,24 +63,82 @@ export const WalletBalance: React.FC = () => {
     }
   };
 
+  const fetchBalance = async () => {
+    if (!connected || !publicKey) return;
+
+    setLoading(true);
+    try {
+      const solBalance = await connection.getBalance(publicKey);
+      const solBalanceInSOL = solBalance / 1_000_000_000;
+      setBalance(solBalanceInSOL);
+
+      console.log("SOL Balance:", solBalanceInSOL);
+
+      if (solPrice > 0) {
+        const usdValue = solBalanceInSOL * solPrice;
+        setBalanceInUSD(usdValue);
+        console.log("Calculated USD value:", usdValue);
+      } else {
+        console.log("SOL price not available yet, USD value will be 0");
+      }
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance(0);
+      setBalanceInUSD(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const refreshAllData = async () => {
-    await fetchSOLPrice();
-    await fetchBalance();
+    setUsdLoading(true);
+    try {
+      const price = await fetchSOLPrice();
+      console.log("Refreshed SOL price:", price);
+
+      if (connected && publicKey) {
+        const solBalance = await connection.getBalance(publicKey);
+        const solBalanceInSOL = solBalance / 1_000_000_000;
+        setBalance(solBalanceInSOL);
+
+        const usdValue = solBalanceInSOL * price;
+        setBalanceInUSD(usdValue);
+        console.log("Refreshed USD value:", usdValue);
+      }
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setUsdLoading(false);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (connected && publicKey) {
-      refreshAllData();
+    const initializeData = async () => {
+      if (connected && publicKey) {
+        await refreshAllData();
+      }
+    };
 
-      const interval = setInterval(refreshAllData, 30000);
-      return () => clearInterval(interval);
-    } else {
-      setBalance(0);
-      setBalanceInUSD(0);
-      setSolPrice(0);
-    }
+    initializeData();
+
+    const interval = setInterval(() => {
+      if (connected && publicKey) {
+        fetchBalance();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey, connection]);
+
+  useEffect(() => {
+    if (solPrice > 0 && balance > 0) {
+      const usdValue = balance * solPrice;
+      setBalanceInUSD(usdValue);
+      console.log("Updated USD value with new SOL price:", usdValue);
+    }
+  }, [solPrice, balance]);
 
   if (!connected) {
     return (
@@ -127,13 +184,13 @@ export const WalletBalance: React.FC = () => {
           </div>
           <button
             onClick={refreshAllData}
-            disabled={loading}
+            disabled={loading || usdLoading}
             className="p-2 bg-[#e5ff4a]/10 hover:bg-[#e5ff4a]/20 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 cursor-pointer group"
-            title="Refresh balance"
+            title="Refresh balance and prices"
           >
             <RefreshCw
               className={`w-5 h-5 text-[#e5ff4a] group-hover:rotate-180 transition-transform duration-500 ${
-                loading ? "animate-spin" : ""
+                loading || usdLoading ? "animate-spin" : ""
               }`}
             />
           </button>
@@ -151,7 +208,7 @@ export const WalletBalance: React.FC = () => {
                 </span>
               </div>
               <div className="text-xs text-gray-500">
-                ${solPrice.toFixed(2)}/SOL
+                ${solPrice > 0 ? solPrice.toFixed(2) : "..."}/SOL
               </div>
             </div>
             {loading ? (
@@ -170,10 +227,20 @@ export const WalletBalance: React.FC = () => {
 
           {/* USD Value */}
           <div className="bg-black/30 rounded-xl p-4 border border-gray-700/50">
-            <div className="text-gray-400 text-sm font-medium mb-2">
-              USD Value
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-green-400" />
+                <span className="text-gray-400 text-sm font-medium">
+                  USD Value
+                </span>
+              </div>
+              {usdLoading && (
+                <div className="text-xs text-[#e5ff4a] animate-pulse">
+                  Updating...
+                </div>
+              )}
             </div>
-            {loading ? (
+            {loading || usdLoading ? (
               <div className="h-8 w-32 bg-gray-700 rounded-lg animate-pulse"></div>
             ) : (
               <div className="flex items-baseline gap-1">
@@ -183,6 +250,14 @@ export const WalletBalance: React.FC = () => {
                 <span className="text-xs text-gray-500 ml-1">USD</span>
               </div>
             )}
+            {balanceInUSD === 0 &&
+              solPrice === 0 &&
+              !loading &&
+              !usdLoading && (
+                <div className="text-xs text-yellow-400 mt-2">
+                  Click refresh to load SOL price
+                </div>
+              )}
           </div>
         </div>
 
@@ -217,7 +292,11 @@ export const WalletBalance: React.FC = () => {
         {/* Live Update Indicator */}
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#e5ff4a]/10">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-xs text-gray-500">Live updates every 30s</span>
+          <span className="text-xs text-gray-500">
+            {solPrice > 0
+              ? "Live updates every 30s"
+              : "Click refresh to load prices"}
+          </span>
         </div>
       </div>
     </div>
