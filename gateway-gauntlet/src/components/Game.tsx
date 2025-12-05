@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { GameState, TransactionResult, NetworkCondition } from "@/types/game";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import {
   GAME_STRATEGIES,
   NETWORK_CONDITIONS,
@@ -358,7 +359,9 @@ export const Game: React.FC<GameProps> = ({
 
           <div className="lg:col-span-1 hidden md:block">
             {connected ? (
-              <WalletBalance />
+              <div className="flex justify-end">
+                <WalletMultiButton />
+              </div>
             ) : (
               <div className="flex justify-center items-center gap-5">
                 <button
@@ -401,9 +404,14 @@ export const Game: React.FC<GameProps> = ({
           </div>
 
           <div className="lg:col-span-1">
+            {connected && (
+              <div className="mb-5">
+                <WalletBalance />
+              </div>
+            )}
             <div
               className="h-[800px] lg:h-full lg:min-h-[600px]"
-              style={{ maxHeight: "1760px" }}
+              style={{ maxHeight: connected ? "1260px" : "1760px" }}
             >
               <TransactionFeed transactions={transactionHistory} />
             </div>
