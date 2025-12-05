@@ -6,12 +6,27 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Wallet, Coins, RefreshCw, ExternalLink } from "lucide-react";
 import Image from "next/image";
 
+const formatNumberWithCommas = (num: number): string => {
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const formatSOL = (sol: number): string => {
+  return sol.toLocaleString("en-US", {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  });
+};
+
 export const WalletBalance: React.FC = () => {
   const { connected, publicKey, wallet } = useWallet();
   const { connection } = useConnection();
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [balanceInUSD, setBalanceInUSD] = useState<number>(0);
+  const [solPrice, setSolPrice] = useState<number>(0);
 
   const fetchBalance = async () => {
     if (!connected || !publicKey) return;
@@ -22,7 +37,6 @@ export const WalletBalance: React.FC = () => {
       const solBalanceInSOL = solBalance / 1_000_000_000;
       setBalance(solBalanceInSOL);
 
-      const solPrice = await fetchSOLPrice();
       setBalanceInUSD(solBalanceInSOL * solPrice);
     } catch (error) {
       console.error("Error fetching balance:", error);
@@ -39,22 +53,32 @@ export const WalletBalance: React.FC = () => {
         "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
       );
       const data = await response.json();
-      return data.solana.usd;
+      const price = data.solana.usd;
+      setSolPrice(price);
+      return price;
     } catch (error) {
       console.error("Error fetching SOL price, using fallback:", error);
-      return 100;
+      const fallbackPrice = 100;
+      setSolPrice(fallbackPrice);
+      return fallbackPrice;
     }
+  };
+
+  const refreshAllData = async () => {
+    await fetchSOLPrice();
+    await fetchBalance();
   };
 
   useEffect(() => {
     if (connected && publicKey) {
-      fetchBalance();
+      refreshAllData();
 
-      const interval = setInterval(fetchBalance, 30000);
+      const interval = setInterval(refreshAllData, 30000);
       return () => clearInterval(interval);
     } else {
       setBalance(0);
       setBalanceInUSD(0);
+      setSolPrice(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey, connection]);
@@ -72,79 +96,128 @@ export const WalletBalance: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <WalletMultiButton className="bg-red-500/20! text-red-400! font-bold! px-4! py-2! rounded-xl! hover:bg-red-500/30! transition-all duration-300 border border-red-500/30 hover:border-red-500/50" />
-
-      <div className="bg-black/40 backdrop-blur-lg rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 min-w-[280px] w-full">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-black/40 backdrop-blur-lg rounded-2xl p-6 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 min-w-[320px] w-full shadow-xl shadow-[#e5ff4a]/5">
+        {/* Wallet Header */}
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             {walletIcon ? (
-              <Image src={walletIcon} alt={walletName} width={50} height={50} />
+              <div className="w-12 h-12 bg-black/20 rounded-xl flex items-center justify-center p-2 border border-[#e5ff4a]/10">
+                <Image
+                  src={walletIcon}
+                  alt={walletName}
+                  width={24}
+                  height={24}
+                  className="rounded"
+                />
+              </div>
             ) : (
-              <div className="w-8 h-8 bg-[#e5ff4a]/20 rounded-lg flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-[#e5ff4a]" />
+              <div className="w-12 h-12 bg-[#e5ff4a]/10 rounded-xl flex items-center justify-center border border-[#e5ff4a]/20">
+                <Wallet className="w-6 h-6 text-[#e5ff4a]" />
               </div>
             )}
             <div>
-              <div className="text-sm text-green-400">Connected</div>
-              <div className="text-white font-semibold">{walletName}</div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="text-xs text-green-400 font-semibold">
+                  Connected
+                </div>
+              </div>
+              <div className="text-white font-bold">{walletName}</div>
             </div>
           </div>
           <button
-            onClick={fetchBalance}
+            onClick={refreshAllData}
             disabled={loading}
-            className="p-2 bg-[#e5ff4a]/10 hover:bg-[#e5ff4a]/20 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+            className="p-2 bg-[#e5ff4a]/10 hover:bg-[#e5ff4a]/20 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 cursor-pointer group"
             title="Refresh balance"
           >
             <RefreshCw
-              className={`w-4 h-4 text-[#e5ff4a] ${
+              className={`w-5 h-5 text-[#e5ff4a] group-hover:rotate-180 transition-transform duration-500 ${
                 loading ? "animate-spin" : ""
               }`}
             />
           </button>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Coins className="w-4 h-4 text-[#e5ff4a]" />
-              <span className="text-gray-400 text-sm">SOL Balance</span>
+        {/* Balance Display */}
+        <div className="space-y-4 mb-4">
+          {/* SOL Balance */}
+          <div className="bg-black/30 rounded-xl p-4 border border-gray-700/50">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Coins className="w-5 h-5 text-[#e5ff4a]" />
+                <span className="text-gray-400 text-sm font-medium">
+                  SOL Balance
+                </span>
+              </div>
+              <div className="text-xs text-gray-500">
+                ${solPrice.toFixed(2)}/SOL
+              </div>
             </div>
-            <div className="text-right">
-              {loading ? (
-                <div className="h-6 w-20 bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <div className="text-white font-bold text-lg">
-                  {balance.toFixed(4)} SOL
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 text-sm">USD Value</span>
             {loading ? (
-              <div className="h-5 w-16 bg-gray-700 rounded animate-pulse"></div>
+              <div className="h-10 w-40 bg-gray-700 rounded-lg animate-pulse"></div>
             ) : (
-              <div className="text-gray-300 font-semibold">
-                ${balanceInUSD.toFixed(2)}
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-white">
+                  {formatSOL(balance)}
+                </span>
+                <span className="text-lg text-[#e5ff4a] font-semibold">
+                  SOL
+                </span>
               </div>
             )}
           </div>
 
-          <div className="pt-3 border-t border-[#e5ff4a]/20">
+          {/* USD Value */}
+          <div className="bg-black/30 rounded-xl p-4 border border-gray-700/50">
+            <div className="text-gray-400 text-sm font-medium mb-2">
+              USD Value
+            </div>
+            {loading ? (
+              <div className="h-8 w-32 bg-gray-700 rounded-lg animate-pulse"></div>
+            ) : (
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-white">
+                  ${formatNumberWithCommas(balanceInUSD)}
+                </span>
+                <span className="text-xs text-gray-500 ml-1">USD</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Address and Footer */}
+        <div className="pt-4 border-t border-[#e5ff4a]/20">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-gray-500 text-xs">Wallet Address</span>
             <a
               href={`https://explorer.solana.com/address/${publicKey?.toString()}?cluster=devnet`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-gray-400 hover:text-[#e5ff4a] text-sm transition-colors group"
+              className="text-[#e5ff4a] hover:text-[#ffd700] transition-colors"
+              title="View on Explorer"
             >
-              <span className="truncate max-w-40">
-                {publicKey?.toString().slice(0, 8)}...
-                {publicKey?.toString().slice(-8)}
-              </span>
-              <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ExternalLink className="w-4 h-4" />
             </a>
           </div>
+          <a
+            href={`https://explorer.solana.com/address/${publicKey?.toString()}?cluster=devnet`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-gray-400 hover:text-[#e5ff4a] text-sm transition-colors group bg-black/20 rounded-lg p-3 hover:bg-black/30"
+          >
+            <div className="flex-1 truncate font-mono text-xs">
+              {publicKey?.toString().slice(0, 12)}...
+              {publicKey?.toString().slice(-12)}
+            </div>
+            <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </a>
+        </div>
+
+        {/* Live Update Indicator */}
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#e5ff4a]/10">
+          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-xs text-gray-500">Live updates every 30s</span>
         </div>
       </div>
     </div>
