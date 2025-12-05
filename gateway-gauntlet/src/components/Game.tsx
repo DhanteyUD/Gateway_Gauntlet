@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useRouter } from "next/navigation";
 import { GameState, TransactionResult, NetworkCondition } from "@/types/game";
 import {
   GAME_STRATEGIES,
@@ -40,14 +39,17 @@ import {
 
 interface GameProps {
   playWithoutWallet?: boolean;
+  onResetGameState?: () => void;
 }
 
 const GAME_STATE_KEY = "gateway-gauntlet-game-state";
 const TRANSACTION_HISTORY_KEY = "gateway-gauntlet-transaction-history";
 
-export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
-  const router = useRouter();
-  const { connected, publicKey } = useWallet();
+export const Game: React.FC<GameProps> = ({
+  playWithoutWallet = false,
+  onResetGameState,
+}) => {
+  const { connected, publicKey, disconnect } = useWallet();
 
   const [showResultModal, setShowResultModal] = useState(false);
   const [lastResult, setLastResult] = useState<TransactionResult | null>(null);
@@ -98,6 +100,20 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
     isPlaying: false,
     totalRealGatewayUsed: 0,
   });
+
+  const handleLogout = async () => {
+    if (connected) {
+      await disconnect();
+    }
+
+    // Clear saved state
+    if (onResetGameState) {
+      onResetGameState();
+    }
+
+    // Optional: Clear other localStorage items
+    localStorage.removeItem(GAME_STATE_KEY);
+  };
 
   const [gameState, setGameState] = useState<GameState>(loadGameState);
   const [currentCondition, setCurrentCondition] = useState<NetworkCondition>(
@@ -353,12 +369,14 @@ export const Game: React.FC<GameProps> = ({ playWithoutWallet = false }) => {
                     <RotateCcw className="w-4 h-4" />
                     Reset Game
                   </button>
-                  <div
-                    className="flex items-center gap-2 px-6 py-3 h-12 bg-[#e5ff4a]/10 border border-[#e5ff4a]/30 text-[#e5ff4a] rounded-xl hover:bg-[#e5ff4a]/20 transition-all duration-300 transform hover:scale-105 backdrop-blur-sm cursor-pointer"
-                    onClick={() => router.push("/")}
-                  >
-                    <LogOut className="w-4 h-4 text-[#e5ff4a]" />
-                  </div>
+                  {onResetGameState && (
+                    <div
+                      className="flex items-center gap-2 px-6 py-3 h-12 bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl hover:bg-red-500/20 transition-all duration-300 transform hover:scale-105 backdrop-blur-sm cursor-pointer"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4 text-red-500" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
