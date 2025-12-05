@@ -71,17 +71,14 @@ export const WalletBalance: React.FC = () => {
   const walletIcon = wallet?.adapter.icon;
 
   return (
-    <div className="flex items-center gap-6">
-      <div className="bg-black/40 backdrop-blur-lg rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 min-w-[280px]">
+    <div className="flex flex-col items-center gap-6">
+      <WalletMultiButton className="bg-red-500/20! text-red-400! font-bold! px-4! py-2! rounded-xl! hover:bg-red-500/30! transition-all duration-300 border border-red-500/30 hover:border-red-500/50" />
+
+      <div className="bg-black/40 backdrop-blur-lg rounded-2xl p-4 border border-[#e5ff4a]/20 hover:border-[#e5ff4a]/40 transition-all duration-300 min-w-[280px] w-full">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {walletIcon ? (
-              <Image
-                src={walletIcon}
-                alt={walletName}
-                width={50}
-                height={50}
-              />
+              <Image src={walletIcon} alt={walletName} width={50} height={50} />
             ) : (
               <div className="w-8 h-8 bg-[#e5ff4a]/20 rounded-lg flex items-center justify-center">
                 <Wallet className="w-4 h-4 text-[#e5ff4a]" />
@@ -145,13 +142,11 @@ export const WalletBalance: React.FC = () => {
                 {publicKey?.toString().slice(0, 8)}...
                 {publicKey?.toString().slice(-8)}
               </span>
-              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
           </div>
         </div>
       </div>
-
-      <WalletMultiButton className="bg-red-500/20! text-red-400! font-bold! px-4! py-2! rounded-xl! hover:bg-red-500/30! transition-all duration-300 border border-red-500/30 hover:border-red-500/50" />
     </div>
   );
 };
