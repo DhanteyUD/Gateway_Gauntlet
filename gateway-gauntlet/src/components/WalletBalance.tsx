@@ -285,7 +285,7 @@ export const WalletBalance: React.FC = () => {
               {publicKey?.toString().slice(0, 12)}...
               {publicKey?.toString().slice(-12)}
             </div>
-            <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
           </a>
         </div>
 
