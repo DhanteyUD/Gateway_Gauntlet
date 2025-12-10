@@ -1,6 +1,5 @@
 import { Poppins } from "next/font/google";
-import { WalletProvider } from "@/components/WalletProvider";
-import { ToastProvider } from "@/components/ToastProvider";
+import { AppProviders } from "@/providers/AppProviders";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -37,9 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={poppins.variable}>
       <body>
-        <ToastProvider>
-          <WalletProvider>{children}</WalletProvider>
-        </ToastProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

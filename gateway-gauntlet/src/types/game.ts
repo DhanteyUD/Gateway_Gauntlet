@@ -30,7 +30,7 @@ export interface GameState {
   currentLevel: number;
   isPlaying: boolean;
   totalRealGatewayUsed: number;
-  lastTransactionTimestamp?: number;
+  totalRealTransactions: number;
 }
 
 export interface TransactionResult {
@@ -43,4 +43,9 @@ export interface TransactionResult {
   realGateway?: boolean;
   networkCondition?: string;
   timestamp: number;
+  _realTransaction?: boolean;
+  _amountSent?: number;
+  _recipient?: string;
+  _simulated?: boolean;
+  _errorDetails?: string;
 }

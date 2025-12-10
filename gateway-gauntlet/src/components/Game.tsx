@@ -17,6 +17,11 @@ import { WalletBalance } from "./WalletBalance";
 import { ResultModal } from "./ResultModal";
 import { toastService } from "@/components/ToastProvider";
 import { gameService } from "@/services/gameService";
+import {
+  useGatewayTransaction,
+  useSolBalance,
+  GATEWAY_HOST_ADDRESS,
+} from "@/hooks/useGatewayTransaction";
 import Image from "next/image";
 import {
   Zap,
@@ -56,6 +61,12 @@ export const Game: React.FC<GameProps> = ({
   const [showResultModal, setShowResultModal] = useState(false);
   const [lastResult, setLastResult] = useState<TransactionResult | null>(null);
 
+  const {
+    mutateAsync: sendGatewayTransaction,
+    isPending: isTransactionPending,
+  } = useGatewayTransaction();
+  const { data: walletBalance, refetch: refetchBalance } = useSolBalance();
+
   const loadGameState = (): GameState => {
     if (typeof window === "undefined") return getInitialGameState();
 
@@ -67,6 +78,7 @@ export const Game: React.FC<GameProps> = ({
           ...getInitialGameState(),
           ...parsed,
           totalRealGatewayUsed: parsed.totalRealGatewayUsed || 0,
+          totalRealTransactions: parsed.totalRealTransactions || 0,
         };
       }
     } catch (error) {
@@ -101,6 +113,7 @@ export const Game: React.FC<GameProps> = ({
     currentLevel: 1,
     isPlaying: false,
     totalRealGatewayUsed: 0,
+    totalRealTransactions: 0,
   });
 
   const handleLogout = async () => {
@@ -163,7 +176,7 @@ export const Game: React.FC<GameProps> = ({
   };
 
   const sendTransaction = async (strategyId: string) => {
-    if (isSending) return;
+    if (isSending || isTransactionPending) return;
 
     setIsSending(true);
     const strategy = GAME_STRATEGIES.find((s) => s.id === strategyId);
@@ -174,23 +187,73 @@ export const Game: React.FC<GameProps> = ({
     try {
       if (!publicKey) return;
 
-      const result = await gameService.sendGameTransaction(
-        strategyId,
-        currentCondition,
-        publicKey
-      );
+      let result: TransactionResult;
 
-      const resultWithTimestamp: TransactionResult = {
-        ...result,
-        timestamp: Date.now(),
-        networkCondition: String(
-          result.networkCondition ?? currentCondition.congestion
-        ),
-      };
+      if (connected && publicKey) {
+        if (walletBalance !== undefined && walletBalance < strategy.cost) {
+          toastService.transactionFailed(
+            `Insufficient balance. Need ${
+              strategy.cost
+            } SOL, have ${walletBalance.toFixed(4)} SOL`
+          );
+        }
+
+        toastService.loading(
+          `Executing real transaction: ${strategy.name} (${strategy.cost} SOL)`
+        );
+
+        const transactionResult = await sendGatewayTransaction({ strategyId });
+
+        result = {
+          success:
+            !!transactionResult.signature &&
+            !transactionResult.signature.includes("failed"),
+          cost: strategy.cost,
+          latency: 150 + Math.random() * 300,
+          strategyUsed: strategy.name,
+          signature: transactionResult.signature,
+          realGateway: transactionResult.realGateway,
+          networkCondition: currentCondition.congestion,
+          timestamp: Date.now(),
+          _realTransaction: true,
+          _amountSent: strategy.cost,
+          _recipient: GATEWAY_HOST_ADDRESS,
+        };
+
+        await refetchBalance();
+
+        toastService.success(
+          `${strategy.name} transaction ${
+            result.success ? "successful" : "attempted"
+          }!`
+        );
+      } else {
+        console.log(`🎮 Simulating transaction: ${strategy.name}`);
+
+        const simulationResult = await gameService.sendGameTransaction(
+          strategyId,
+          currentCondition,
+          publicKey
+        );
+
+        result = {
+          ...simulationResult,
+          timestamp: Date.now(),
+          networkCondition: String(
+            simulationResult.networkCondition ?? currentCondition.congestion
+          ),
+          _realTransaction: false,
+          _simulated: true,
+        };
+
+        toastService.info(
+          `${strategy.name} strategy simulated (connect wallet for real transactions)`
+        );
+      }
 
       const newScore =
         gameState.score +
-        calculateScore(resultWithTimestamp, result.success, result.realGateway);
+        calculateScore(result, result.success, result.realGateway);
       const newLevel = calculateLevel(newScore);
 
       setGameState((prev) => ({
@@ -203,31 +266,34 @@ export const Game: React.FC<GameProps> = ({
         currentLevel: newLevel,
         totalRealGatewayUsed:
           prev.totalRealGatewayUsed + (result.realGateway ? 1 : 0),
+        totalRealTransactions:
+          prev.totalRealTransactions + (result._realTransaction ? 1 : 0),
       }));
 
-      setTransactionHistory((prev) => [
-        resultWithTimestamp,
-        ...prev.slice(0, 19),
-      ]);
+      setTransactionHistory((prev) => [result, ...prev.slice(0, 19)]);
 
-      setLastResult(resultWithTimestamp);
+      setLastResult(result);
       setShowResultModal(true);
     } catch (error) {
       console.error("Transaction failed:", error);
+
       const failedResult: TransactionResult = {
         success: false,
-        cost: 0.0001,
+        cost: strategy.cost,
         latency: 0,
         strategyUsed: strategyId,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : "Transaction failed",
         realGateway: false,
         networkCondition: String(currentCondition.congestion),
         timestamp: Date.now(),
+        _realTransaction: connected && publicKey ? true : false,
+        _errorDetails: error instanceof Error ? error.message : "Unknown error",
       };
+
       setTransactionHistory((prev) => [failedResult, ...prev.slice(0, 19)]);
 
       toastService.error(
-        `Transaction error: ${
+        `Transaction failed: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
@@ -242,7 +308,8 @@ export const Game: React.FC<GameProps> = ({
   const calculateScore = (
     result: TransactionResult,
     success: boolean,
-    realGateway?: boolean
+    realGateway?: boolean,
+    realTransaction?: boolean
   ) => {
     let score = 0;
     if (success) {
@@ -264,11 +331,19 @@ export const Game: React.FC<GameProps> = ({
         score += SCORING_RULES.REAL_GATEWAY_BONUS;
       }
 
+      if (realTransaction) {
+        score += SCORING_RULES.REAL_TRANSACTION_BONUS || 200;
+      }
+
       score *= 1 + (gameState.currentLevel - 1) * 0.1;
 
-      score = Math.min(score, SCORING_RULES.MAX_SCORE_PER_TRANSACTION);
+      score = Math.min(score, SCORING_RULES.MAX_SCORE_PER_TRANSACTION || 500);
     } else {
-      score = -5;
+      score = -10;
+
+      if (realTransaction) {
+        score = -5;
+      }
     }
 
     return Math.round(score);
