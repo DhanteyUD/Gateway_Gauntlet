@@ -44,34 +44,6 @@ class GatewayService {
     this.connection = new Connection(clusterApiUrl("devnet"));
   }
 
-  private showToast(
-    type: "success" | "error" | "info" | "warning" | "gateway",
-    message: string,
-    details?: string
-  ) {
-    if (typeof window !== "undefined") {
-      const event = new CustomEvent("show-toast", {
-        detail: { type, message, details },
-      });
-      window.dispatchEvent(event);
-    }
-  }
-
-  private showTransactionToast(
-    success: boolean,
-    signature?: string,
-    cost?: number,
-    strategy?: string,
-    error?: string
-  ) {
-    if (typeof window !== "undefined") {
-      const event = new CustomEvent("transaction-toast", {
-        detail: { success, signature, cost, strategy, error },
-      });
-      window.dispatchEvent(event);
-    }
-  }
-
   async buildGatewayTransaction(options: BuildTransactionOptions = {}) {
     try {
       const fromPubkey =
@@ -86,12 +58,6 @@ class GatewayService {
         to: toPubkey.toString(),
         strategy: options.strategy,
       });
-
-      this.showToast(
-        "info",
-        "Building transaction...",
-        "Using Sanctum Gateway"
-      );
 
       const { blockhash, lastValidBlockHeight } =
         await this.connection.getLatestBlockhash();
@@ -176,12 +142,6 @@ class GatewayService {
           status: buildGatewayTransactionResponse.status,
           error: errorText,
         });
-
-        this.showToast(
-          "error",
-          "Gateway build failed",
-          `Status: ${buildGatewayTransactionResponse.status}`
-        );
         throw new Error(
           `Gateway build failed: ${buildGatewayTransactionResponse.status}`
         );
@@ -191,15 +151,12 @@ class GatewayService {
 
       if (response.error) {
         console.error("Gateway build error details:", response.error);
-        this.showToast("error", "Gateway error", response.error.message);
         throw new Error(
           `Gateway error: ${response.error.message} (code: ${response.error.code})`
         );
       }
 
       console.log("✅ Gateway transaction built successfully");
-      this.showToast("gateway", "Transaction built", "Ready for signing");
-
       return {
         transaction: response.result.transaction,
         latestBlockhash: response.result.latestBlockhash,
@@ -207,7 +164,6 @@ class GatewayService {
       };
     } catch (error) {
       console.error("❌ Error building gateway transaction:", error);
-      this.showToast("warning", "Using simulation", "Gateway unavailable");
       return await this.simulateGatewayCall(options.strategy || "hybrid");
     }
   }
@@ -215,11 +171,6 @@ class GatewayService {
   async sendTransaction(encodedTransaction: string) {
     try {
       console.log("🚀 Sending transaction via Gateway...");
-      this.showToast(
-        "info",
-        "Sending transaction...",
-        "Delivering to Solana network"
-      );
 
       const sendTransactionResponse = await fetch(GATEWAY_PROXY_ENDPOINT, {
         method: "POST",
@@ -241,7 +192,6 @@ class GatewayService {
 
       if (!sendTransactionResponse.ok) {
         const errorText = await sendTransactionResponse.text();
-        this.showToast("error", "Transaction failed", "Network error");
         throw new Error(
           `Gateway send failed: ${sendTransactionResponse.status} - ${errorText}`
         );
@@ -250,17 +200,13 @@ class GatewayService {
       const response = await sendTransactionResponse.json();
 
       if (response.error) {
-        this.showToast("error", "Transaction rejected", response.error.message);
         throw new Error(`Gateway error: ${response.error.message}`);
       }
 
       console.log("✅ Transaction sent via Gateway:", response.result);
-      this.showToast("gateway", "Transaction sent!", "Processing on Solana");
-
       return response.result;
     } catch (error) {
       console.error("❌ Error sending transaction:", error);
-      this.showToast("warning", "Using simulation", "Gateway send failed");
       return {
         signature: `simulated_${Date.now()}_${Math.random()
           .toString(36)
@@ -378,34 +324,11 @@ class GatewayService {
 
           success = !!sendResult.signature && !sendResult._simulated;
           signature = sendResult.signature;
-
           console.log("🎯 REAL Gateway transaction attempted:", {
             success,
             signature: signature?.slice(0, 20) + "...",
             fromAddress: fromPubkey.toString(),
           });
-
-          if (success) {
-            this.showTransactionToast(
-              true,
-              signature,
-              this.getEstimatedCost(strategy),
-              strategy
-            );
-            this.showToast(
-              "gateway",
-              "Gateway transaction succeeded!",
-              "Real Sanctum Gateway used"
-            );
-          } else {
-            this.showTransactionToast(
-              false,
-              undefined,
-              undefined,
-              strategy,
-              "Gateway transaction failed"
-            );
-          }
         } else {
           type SimulatedBuildResult = {
             _success?: boolean;
@@ -424,21 +347,7 @@ class GatewayService {
           signature = `simulated_${Date.now()}_${Math.random()
             .toString(36)
             .substr(2, 9)}`;
-
           console.log("🎮 Using simulation for transaction");
-          this.showToast(
-            "info",
-            "Using simulation",
-            "No real Gateway connection"
-          );
-
-          this.showTransactionToast(
-            success,
-            signature,
-            this.getEstimatedCost(strategy),
-            strategy,
-            success ? undefined : "Simulated network failure"
-          );
         }
 
         const adjustedSuccess = realGatewayUsed
@@ -463,24 +372,13 @@ class GatewayService {
       } else {
         if (!fromPubkey) {
           console.log("🔑 No wallet connected, using simulation");
-          this.showToast(
-            "info",
-            "No wallet connected",
-            "Using demo simulation"
-          );
         } else {
           console.log("🔑 No valid Gateway API key, using simulation");
-          this.showToast("info", "Demo mode", "No Gateway API key found");
         }
         return this.basicSimulation(strategy, networkCondition);
       }
     } catch (error) {
       console.error("Error in game transaction simulation:", error);
-      this.showToast(
-        "error",
-        "Simulation error",
-        "Falling back to basic simulation"
-      );
       return this.basicSimulation(strategy, networkCondition);
     }
   }
@@ -501,20 +399,6 @@ class GatewayService {
     const adjustedSuccessRate =
       baseSuccessRate * (networkCondition.successRate / 100);
     const success = Math.random() * 100 < adjustedSuccessRate;
-
-    if (success) {
-      this.showToast(
-        "success",
-        "Simulation success",
-        `${strategy} strategy worked`
-      );
-    } else {
-      this.showToast(
-        "warning",
-        "Simulation failed",
-        `${strategy} strategy failed in current conditions`
-      );
-    }
 
     return {
       success,

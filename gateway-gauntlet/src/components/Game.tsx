@@ -145,27 +145,6 @@ export const Game: React.FC<GameProps> = ({
     startGame();
   }, []);
 
-  useEffect(() => {
-    if (gameState.isPlaying) {
-      const conditionMessages = {
-        low: "Network conditions: Optimal 🟢",
-        medium: "Network conditions: Moderate 🟡",
-        high: "Network conditions: Congested 🟠",
-        extreme: "Network conditions: Extreme congestion! 🔴",
-      };
-
-      toastService.info(conditionMessages[currentCondition.congestion]);
-    }
-  }, [currentCondition, gameState.isPlaying]);
-
-  useEffect(() => {
-    if (connected) {
-      toastService.success("Wallet connected successfully!");
-    } else if (!playWithoutWallet) {
-      toastService.warning("Wallet disconnected");
-    }
-  }, [connected, playWithoutWallet]);
-
   const startGame = () => {
     setGameState((prev) => ({ ...prev, isPlaying: true }));
     const interval = setInterval(() => {
@@ -190,7 +169,7 @@ export const Game: React.FC<GameProps> = ({
     const strategy = GAME_STRATEGIES.find((s) => s.id === strategyId);
     if (!strategy) return;
 
-    toastService.loading(`Sending ${strategy.name} transaction...`);
+    toastService.loading(`Initiating ${strategy.name}...`);
 
     try {
       if (!publicKey) return;
@@ -230,24 +209,6 @@ export const Game: React.FC<GameProps> = ({
         resultWithTimestamp,
         ...prev.slice(0, 19),
       ]);
-
-      if (result.success) {
-        if (result.realGateway) {
-          toastService.gatewaySuccess(`Real Gateway transaction succeeded!`);
-        }
-        toastService.transactionSuccess(
-          result.signature || "simulated_transaction",
-          result.cost
-        );
-      } else {
-        toastService.transactionFailed(strategy.name, result.error);
-      }
-
-      if (currentCondition.congestion === "extreme" && !result.success) {
-        toastService.warning(
-          'Extreme network congestion! Try the "Fast" strategy for better results.'
-        );
-      }
 
       setLastResult(resultWithTimestamp);
       setShowResultModal(true);
