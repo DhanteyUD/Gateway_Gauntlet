@@ -49,8 +49,8 @@ interface GameProps {
   onResetGameState?: () => void;
 }
 
-const GAME_STATE_KEY = "gateway-gauntlet-game-state";
-const TRANSACTION_HISTORY_KEY = "gateway-gauntlet-transaction-history";
+const GAME_STATE_KEY = "gateway-gauntlet-game-state-v2";
+const TRANSACTION_HISTORY_KEY = "gateway-gauntlet-transaction-history-v2";
 
 export const Game: React.FC<GameProps> = ({
   playWithoutWallet = false,
@@ -72,6 +72,7 @@ export const Game: React.FC<GameProps> = ({
 
     try {
       const saved = localStorage.getItem(GAME_STATE_KEY);
+
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
@@ -79,10 +80,17 @@ export const Game: React.FC<GameProps> = ({
           ...parsed,
           totalRealGatewayUsed: parsed.totalRealGatewayUsed || 0,
           totalRealTransactions: parsed.totalRealTransactions || 0,
+          score: Number(parsed.score || 0),
+          transactionsAttempted: Number(parsed.transactionsAttempted || 0),
+          transactionsSuccessful: Number(parsed.transactionsSuccessful || 0),
+          totalCost: Number(parsed.totalCost || 0),
+          currentLevel: Number(parsed.currentLevel || 1),
+          isPlaying: Boolean(parsed.isPlaying || false),
         };
       }
     } catch (error) {
       console.error("Error loading game state:", error);
+      localStorage.removeItem(GAME_STATE_KEY);
     }
     return getInitialGameState();
   };
@@ -95,12 +103,25 @@ export const Game: React.FC<GameProps> = ({
       if (saved) {
         const transactions = JSON.parse(saved);
         return transactions.map((tx: TransactionResult) => ({
-          ...tx,
+          success: tx.success || false,
+          cost: tx.cost || 0,
+          latency: tx.latency || 0,
+          strategyUsed: tx.strategyUsed || "",
+          signature: tx.signature,
+          error: tx.error,
+          realGateway: tx.realGateway || false,
+          networkCondition: tx.networkCondition || "medium",
           timestamp: tx.timestamp || Date.now(),
+          _realTransaction: tx._realTransaction || false,
+          _simulated: tx._simulated || false,
+          _amountSent: tx._amountSent,
+          _recipient: tx._recipient,
+          _errorDetails: tx._errorDetails,
         }));
       }
     } catch (error) {
       console.error("Error loading transaction history:", error);
+      localStorage.removeItem(TRANSACTION_HISTORY_KEY);
     }
     return [];
   };
@@ -140,16 +161,27 @@ export const Game: React.FC<GameProps> = ({
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
+    if (typeof window !== "undefined" && gameState) {
+      localStorage.setItem(
+        GAME_STATE_KEY,
+        JSON.stringify({
+          ...gameState,
+          _lastSaved: Date.now(),
+        })
+      );
     }
   }, [gameState]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && transactionHistory.length > 0) {
       localStorage.setItem(
         TRANSACTION_HISTORY_KEY,
-        JSON.stringify(transactionHistory)
+        JSON.stringify(
+          transactionHistory.map((tx) => ({
+            ...tx,
+            timestamp: tx.timestamp || Date.now(),
+          }))
+        )
       );
     }
   }, [transactionHistory]);
@@ -182,8 +214,6 @@ export const Game: React.FC<GameProps> = ({
     const strategy = GAME_STRATEGIES.find((s) => s.id === strategyId);
     if (!strategy) return;
 
-    toastService.loading(`Initiating ${strategy.name}...`);
-
     try {
       if (!publicKey) return;
 
@@ -197,10 +227,6 @@ export const Game: React.FC<GameProps> = ({
             } SOL, have ${walletBalance.toFixed(4)} SOL`
           );
         }
-
-        toastService.loading(
-          `Executing real transaction: ${strategy.name} (${strategy.cost} SOL)`
-        );
 
         const transactionResult = await sendGatewayTransaction({ strategyId });
 

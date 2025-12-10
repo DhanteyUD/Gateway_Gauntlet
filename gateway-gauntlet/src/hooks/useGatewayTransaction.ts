@@ -8,7 +8,6 @@ import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { gatewayService } from "@/services/gatewayService";
 import { GAME_STRATEGIES } from "@/constants/gameConfig";
-import { toastService } from "@/components/ToastProvider";
 
 export const GATEWAY_HOST_ADDRESS =
   process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS ||
@@ -30,10 +29,6 @@ export const useGatewayTransaction = () => {
       if (!strategy) {
         throw new Error("Invalid strategy");
       }
-
-      toastService.loading(
-        `Sending ${strategy.cost} SOL via ${strategy.name} strategy...`
-      );
 
       const toPubKey = new PublicKey(GATEWAY_HOST_ADDRESS);
       const lamports = strategy.cost * LAMPORTS_PER_SOL;
