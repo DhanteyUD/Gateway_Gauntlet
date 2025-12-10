@@ -142,42 +142,6 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             </div>
           </div>
 
-          {result?._realTransaction && (
-            <div className="bg-[#e5ff4a]/10 border border-[#e5ff4a]/30 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Wallet className="w-4 h-4 text-[#e5ff4a]" />
-                <span className="text-[#e5ff4a] font-semibold">
-                  Real Transaction
-                </span>
-              </div>
-              <div className="text-sm text-gray-300 space-y-1">
-                <div className="flex justify-between">
-                  <span>Amount sent:</span>
-                  <span className="text-[#e5ff4a]">
-                    {result?._amountSent} SOL
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>To address:</span>
-                  <span className="text-gray-400 text-xs truncate max-w-[150px]">
-                    {result?._recipient?.slice(0, 8)}...
-                    {result?._recipient?.slice(-8)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Status:</span>
-                  <span
-                    className={
-                      result?.success ? "text-green-400" : "text-red-400"
-                    }
-                  >
-                    {result?.success ? "Confirmed" : "Failed"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
           {result.realGateway && (
             <div className="flex items-center justify-between p-3 bg-green-400/10 rounded-xl border border-green-400/30">
               <div className="flex items-center gap-3">
