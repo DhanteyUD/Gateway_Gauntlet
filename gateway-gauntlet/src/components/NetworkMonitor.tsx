@@ -2,7 +2,7 @@
 
 import React from "react";
 import { NetworkCondition } from "@/types/game";
-import { Wifi, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { Wifi, Activity, Clock, AlertCircle, Brain } from "lucide-react";
 
 interface NetworkMonitorProps {
   condition: NetworkCondition;
@@ -20,6 +20,9 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
           borderColor: "border-green-400/30",
           icon: "🟢",
           label: "Optimal",
+          successColor: "text-green-400",
+          progressColor: "bg-green-400",
+          iconColor: "text-green-400",
         };
       case "medium":
         return {
@@ -28,6 +31,9 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
           borderColor: "border-yellow-400/30",
           icon: "🟡",
           label: "Moderate",
+          successColor: "text-yellow-400",
+          progressColor: "bg-yellow-400",
+          iconColor: "text-yellow-400",
         };
       case "high":
         return {
@@ -36,6 +42,9 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
           borderColor: "border-orange-400/30",
           icon: "🟠",
           label: "High",
+          successColor: "text-orange-400",
+          progressColor: "bg-orange-400",
+          iconColor: "text-orange-400",
         };
       case "extreme":
         return {
@@ -44,6 +53,9 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
           borderColor: "border-red-400/30",
           icon: "🔴",
           label: "Extreme",
+          successColor: "text-red-400",
+          progressColor: "bg-red-400",
+          iconColor: "text-red-400",
         };
       default:
         return {
@@ -52,6 +64,9 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
           borderColor: "border-gray-400/30",
           icon: "⚪",
           label: "Unknown",
+          successColor: "text-gray-400",
+          progressColor: "bg-gray-400",
+          iconColor: "text-gray-400",
         };
     }
   };
@@ -62,11 +77,15 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
     <div className="bg-black/40 backdrop-blur-lg border border-[#e5ff4a]/20 rounded-2xl p-6 shadow-2xl shadow-[#e5ff4a]/5 hover:border-[#e5ff4a]/30 transition-all duration-300">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-[#e5ff4a]/10 rounded-lg md:rounded-xl flex items-center justify-center">
-          <Wifi className="w-5 h-5 text-[#e5ff4a]" />
+          <Brain className="w-5 h-5 text-[#e5ff4a]" />
         </div>
         <div>
-          <h2 className="text-base md:text-xl font-bold text-white">Battlefield Intelligence</h2>
-          <p className="text-[10px] md:text-sm text-gray-400">Live Solana conditions</p>
+          <h2 className="text-base md:text-xl font-bold text-white">
+            Battlefield Intelligence
+          </h2>
+          <p className="text-[10px] md:text-sm text-gray-400">
+            Live Solana conditions
+          </p>
         </div>
       </div>
 
@@ -75,7 +94,7 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-xl md:text-2xl">{config.icon}</div>
+            <Wifi className={`text-xl md:text-2xl ${config.iconColor}`} />
             <div>
               <p className="text-xs md:text-sm text-gray-300">Congestion</p>
               <p className={`text-base md:text-lg font-bold ${config.color}`}>
@@ -95,19 +114,21 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-green-400" />
+            <Activity className={`w-4 h-4 ${config.iconColor}`} />
             <span className="text-[10px] md:text-xs text-gray-400 font-medium">
               Success Rate
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-xl md:text-2xl font-bold text-green-400">
+            <span
+              className={`text-xl md:text-2xl font-bold ${config.successColor}`}
+            >
               {condition.successRate}%
             </span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-1.5 mt-2">
             <div
-              className="bg-green-400 h-1.5 rounded-full transition-all duration-500"
+              className={`h-1.5 rounded-full transition-all duration-500 ${config.progressColor}`}
               style={{ width: `${condition.successRate}%` }}
             ></div>
           </div>
@@ -152,7 +173,9 @@ export const NetworkMonitor: React.FC<NetworkMonitorProps> = ({
 
       <div className="flex items-center gap-2 mt-4 justify-end">
         <div className="w-1 md:w-2 h-1 md:h-2 bg-green-400 rounded-full animate-pulse"></div>
-        <span className="text-[10px] md:text-xs text-gray-400">Live updates every 30s</span>
+        <span className="text-[10px] md:text-xs text-gray-400">
+          Live updates every 30s
+        </span>
       </div>
     </div>
   );

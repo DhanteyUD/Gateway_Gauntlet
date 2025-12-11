@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Scale,
   Copy,
+  Wallet,
 } from "lucide-react";
 
 interface ResultModalProps {
@@ -63,9 +64,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             </div>
             <div>
               <h2 className="text-base md:text-xl font-bold text-white">
-                {result.success
-                  ? "Mission Accomplished"
-                  : "Mission Failed"}
+                {result.success ? "Mission Accomplished" : "Mission Failed"}
               </h2>
               <p className="text-xs md:text-sm text-gray-400">
                 {result.success
@@ -107,7 +106,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                     })()}
                   </div>
                 </div>
-                <span className="text-xs md:text-base text-gray-400">Strategy</span>
+                <span className="text-xs md:text-base text-gray-400">
+                  Strategy
+                </span>
               </div>
               <span className="text-sm md:text-base font-semibold text-white capitalize">
                 {result.strategyUsed}
@@ -131,7 +132,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 <div className="w-8 h-8 bg-purple-400/10 rounded-lg flex items-center justify-center">
                   <Clock className="w-4 h-4 text-purple-400" />
                 </div>
-                <span className="text-xs md:text-base text-gray-400">Latency</span>
+                <span className="text-xs md:text-base text-gray-400">
+                  Latency
+                </span>
               </div>
               <span className="text-sm md:text-base font-semibold text-purple-400">
                 {result.latency.toFixed(0)}ms
@@ -145,7 +148,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 <div className="w-8 h-8 bg-green-400/20 rounded-lg flex items-center justify-center">
                   <Zap className="w-4 h-4 text-green-400" />
                 </div>
-                <span className="text-xs md:text-base text-gray-400">Gateway</span>
+                <span className="text-xs md:text-base text-gray-400">
+                  Gateway
+                </span>
               </div>
               <span className="text-sm md:text-base font-semibold text-green-400">
                 Real Gateway Used
@@ -157,7 +162,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             <div className="p-3 bg-black/40 rounded-xl border border-gray-700/50">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-blue-400" />
-                <span className="text-xs md:text-sm text-gray-400">Transaction ID</span>
+                <span className="text-xs md:text-sm text-gray-400">
+                  Transaction ID
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs text-gray-300 font-mono bg-black/30 px-2 py-1 rounded truncate">

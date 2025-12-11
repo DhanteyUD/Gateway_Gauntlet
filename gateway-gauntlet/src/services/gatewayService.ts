@@ -252,17 +252,8 @@ class GatewayService {
 
   async simulateGameTransaction(
     strategy: string,
-    networkCondition: NetworkCondition,
-    fromPubkey?: PublicKey
-  ): Promise<{
-    success: boolean;
-    cost: number;
-    latency: number;
-    strategyUsed: string;
-    signature: string | undefined;
-    _realGateway: boolean;
-    _networkCondition: string | number | undefined;
-  }> {
+    networkCondition: NetworkCondition
+  ) {
     try {
       const strategyMap: Record<
         string,
@@ -272,111 +263,80 @@ class GatewayService {
           cuPriceRange?: "low" | "medium" | "high";
         }
       > = {
-        safe: {
-          strategy: "sanctum",
-          jitoTipRange: "low",
-          cuPriceRange: "medium",
-        },
-        balanced: {
-          strategy: "hybrid",
-          jitoTipRange: "medium",
-          cuPriceRange: "medium",
-        },
-        fast: {
-          strategy: "jito",
-          jitoTipRange: "high",
-          cuPriceRange: "high",
-        },
-        cheap: {
-          strategy: "rpc",
-          jitoTipRange: "low",
-          cuPriceRange: "low",
-        },
+        safe: { strategy: "sanctum", jitoTipRange: "low" },
+        balanced: { strategy: "hybrid", jitoTipRange: "medium" },
+        fast: { strategy: "jito", jitoTipRange: "high" },
+        cheap: { strategy: "rpc", jitoTipRange: "low" },
       };
 
-      const gatewayOptions = strategyMap[strategy] || {
-        strategy: "hybrid",
-        cuPriceRange: "medium",
-      };
+      const gatewayOptions = strategyMap[strategy] || { strategy: "hybrid" };
 
-      const hasValidApiKey = process.env.NEXT_PUBLIC_GATEWAY_API_KEY;
-
-      if (hasValidApiKey && fromPubkey) {
-        console.log(
-          "🔧 Attempting real Gateway transaction with user wallet:",
-          fromPubkey.toString()
-        );
-
-        const buildResult = await this.buildGatewayTransaction({
-          ...gatewayOptions,
-          fromPubkey,
-        });
-
-        let success;
-        let signature;
-        let realGatewayUsed = false;
-
-        if ("_realGateway" in buildResult && buildResult._realGateway) {
-          realGatewayUsed = true;
-          const sendResult = await this.sendTransaction(
-            buildResult.transaction
-          );
-
-          success = !!sendResult.signature && !sendResult._simulated;
-          signature = sendResult.signature;
-          console.log("🎯 REAL Gateway transaction attempted:", {
-            success,
-            signature: signature?.slice(0, 20) + "...",
-            fromAddress: fromPubkey.toString(),
-          });
-        } else {
-          type SimulatedBuildResult = {
-            _success?: boolean;
-            _successRate?: number;
-            transaction: string;
-            latestBlockhash: {
-              blockhash: string;
-              lastValidBlockHeight: string;
-            };
-            _simulated?: boolean;
-          };
-
-          success =
-            (buildResult as SimulatedBuildResult)._success ||
-            Math.random() * 100 < (networkCondition.successRate || 80);
-          signature = `simulated_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`;
-          console.log("🎮 Using simulation for transaction");
-        }
-
-        const adjustedSuccess = realGatewayUsed
-          ? success
-          : Math.random() * 100 <
-            (networkCondition.successRate *
-              ("_successRate" in buildResult &&
-              typeof buildResult._successRate === "number"
-                ? buildResult._successRate
-                : 80)) /
-              100;
-
-        return {
-          success: adjustedSuccess,
-          cost: this.getEstimatedCost(strategy),
-          latency: this.getLatency(strategy),
-          strategyUsed: strategy,
-          signature,
-          _realGateway: realGatewayUsed,
-          _networkCondition: networkCondition.congestion,
-        };
-      } else {
-        if (!fromPubkey) {
-          console.log("🔑 No wallet connected, using simulation");
-        } else {
-          console.log("🔑 No valid Gateway API key, using simulation");
-        }
-        return this.basicSimulation(strategy, networkCondition);
+      if (
+        networkCondition.congestion === "high" ||
+        networkCondition.congestion === "extreme"
+      ) {
+        gatewayOptions.jitoTipRange = "high";
+        gatewayOptions.cuPriceRange = "high";
       }
+
+      const buildResult = await this.buildGatewayTransaction(gatewayOptions);
+
+      let success;
+      let signature;
+      let realGatewayUsed = false;
+
+      if ("_realGateway" in buildResult && buildResult._realGateway) {
+        realGatewayUsed = true;
+        const sendResult = await this.sendTransaction(buildResult.transaction);
+        success =
+          !!sendResult.signature && !sendResult.signature.includes("failed");
+        signature = sendResult.signature;
+        console.log("🎯 REAL Gateway transaction attempted:", {
+          success,
+          signature: signature?.slice(0, 20) + "...",
+          networkCondition: networkCondition.congestion,
+        });
+      } else {
+        const baseSuccessRate =
+          ("_successRate" in buildResult ? buildResult._successRate : 80) || 80;
+
+        const networkMultipliers = {
+          low: 1.2,
+          medium: 1.0,
+          high: 0.7,
+          extreme: 0.5,
+        };
+
+        const multiplier =
+          networkMultipliers[
+            (networkCondition.congestion ||
+              "medium") as keyof typeof networkMultipliers
+          ] || 1.0;
+        const adjustedSuccessRate = baseSuccessRate * multiplier;
+
+        success = Math.random() * 100 < adjustedSuccessRate;
+        signature = `simulated_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        console.log("🎮 Using simulation for transaction", {
+          successRate: adjustedSuccessRate,
+          networkCondition: networkCondition.congestion,
+        });
+      }
+
+      const finalSuccess =
+        success && Math.random() * 100 < networkCondition.successRate;
+
+      return {
+        success: finalSuccess,
+        cost: this.getEstimatedCost(strategy),
+        latency: this.getLatency(strategy) * (1 + (Math.random() - 0.5) * 0.3), // Add variance
+        strategyUsed: strategy,
+        signature,
+        _realGateway: realGatewayUsed,
+        _networkCondition: networkCondition.congestion,
+        _adjustedForNetwork: true,
+      };
     } catch (error) {
       console.error("Error in game transaction simulation:", error);
       return this.basicSimulation(strategy, networkCondition);
