@@ -58,27 +58,27 @@ export const GAME_STRATEGIES: GameStrategy[] = [
 export const NETWORK_CONDITIONS: NetworkCondition[] = [
   {
     congestion: "low",
-    successRate: 95,
+    successRate: 85,
     averageLatency: 200,
-    description: "Network is calm. Transactions should land easily.",
+    description: "Network is calm. Most transactions should succeed.",
   },
   {
     congestion: "medium",
-    successRate: 80,
+    successRate: 65,
     averageLatency: 500,
-    description: "Moderate traffic. Choose your strategy wisely.",
+    description: "Moderate traffic. Many transactions may fail.",
   },
   {
     congestion: "high",
-    successRate: 60,
+    successRate: 40,
     averageLatency: 1200,
-    description: "High congestion! You will need smart routing.",
+    description: "High congestion! Expect frequent failures.",
   },
   {
     congestion: "extreme",
-    successRate: 30,
+    successRate: 20,
     averageLatency: 3000,
-    description: "Network storm! Only the best strategies will succeed.",
+    description: "Network storm! Most transactions will fail.",
   },
 ];
 
@@ -90,5 +90,5 @@ export const SCORING_RULES = {
   REAL_GATEWAY_BONUS: 10,
   MAX_COST_EFFICIENCY: 1000,
   MAX_SCORE_PER_TRANSACTION: 100,
-  REAL_TRANSACTION_BONUS: 200
+  REAL_TRANSACTION_BONUS: 200,
 };

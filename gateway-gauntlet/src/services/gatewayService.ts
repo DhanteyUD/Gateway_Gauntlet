@@ -18,7 +18,7 @@ const GATEWAY_PROXY_ENDPOINT = "/api/gateway";
 
 interface NetworkCondition {
   successRate: number;
-  congestion?: string | number;
+  congestion: "low" | "medium" | "high" | "extreme";
 }
 interface BuildTransactionOptions {
   strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
@@ -255,91 +255,101 @@ class GatewayService {
     networkCondition: NetworkCondition
   ) {
     try {
-      const strategyMap: Record<
-        string,
-        {
-          strategy: "jito" | "rpc" | "hybrid" | "sanctum";
-          jitoTipRange?: "low" | "medium" | "high" | "max";
-          cuPriceRange?: "low" | "medium" | "high";
-        }
-      > = {
-        safe: { strategy: "sanctum", jitoTipRange: "low" },
-        balanced: { strategy: "hybrid", jitoTipRange: "medium" },
-        fast: { strategy: "jito", jitoTipRange: "high" },
-        cheap: { strategy: "rpc", jitoTipRange: "low" },
+      const gatewayBaseRates: Record<string, number> = {
+        safe: 85,
+        balanced: 70,
+        fast: 50,
+        cheap: 65,
       };
 
-      const gatewayOptions = strategyMap[strategy] || { strategy: "hybrid" };
+      const gatewayNetworkMultipliers: Record<string, number> = {
+        low: 0.95,
+        medium: 0.8,
+        high: 0.6,
+        extreme: 0.4,
+      };
 
-      if (
-        networkCondition.congestion === "high" ||
-        networkCondition.congestion === "extreme"
-      ) {
-        gatewayOptions.jitoTipRange = "high";
-        gatewayOptions.cuPriceRange = "high";
+      const baseRate = gatewayBaseRates[strategy] || 65;
+      const multiplier =
+        gatewayNetworkMultipliers[networkCondition.congestion] || 0.7;
+      const gatewaySuccessRate = Math.max(10, baseRate * multiplier);
+
+      console.log(`🔗 Gateway success rate: ${gatewaySuccessRate.toFixed(1)}%`);
+
+      const gatewayResponds = Math.random() > 0.2;
+
+      if (!gatewayResponds) {
+        console.log("🔗 Gateway API timeout - treating as failure");
+        throw new Error("Gateway API timeout");
       }
 
-      const buildResult = await this.buildGatewayTransaction(gatewayOptions);
+      const gatewaySuccess = Math.random() * 100 < gatewaySuccessRate;
+      let realGatewayUsed = Math.random() > 0.8;
 
-      let success;
       let signature;
-      let realGatewayUsed = false;
+      let realTransactionAttempted = false;
 
-      if ("_realGateway" in buildResult && buildResult._realGateway) {
-        realGatewayUsed = true;
-        const sendResult = await this.sendTransaction(buildResult.transaction);
-        success =
-          !!sendResult.signature && !sendResult.signature.includes("failed");
-        signature = sendResult.signature;
-        console.log("🎯 REAL Gateway transaction attempted:", {
-          success,
-          signature: signature?.slice(0, 20) + "...",
-          networkCondition: networkCondition.congestion,
-        });
-      } else {
-        const baseSuccessRate =
-          ("_successRate" in buildResult ? buildResult._successRate : 80) || 80;
+      if (realGatewayUsed) {
+        try {
+          const buildResult = await this.buildGatewayTransaction({
+            strategy:
+              strategy === "safe"
+                ? "sanctum"
+                : strategy === "fast"
+                ? "jito"
+                : strategy === "cheap"
+                ? "rpc"
+                : "hybrid",
+          });
 
-        const networkMultipliers = {
-          low: 1.2,
-          medium: 1.0,
-          high: 0.7,
-          extreme: 0.5,
-        };
-
-        const multiplier =
-          networkMultipliers[
-            (networkCondition.congestion ||
-              "medium") as keyof typeof networkMultipliers
-          ] || 1.0;
-        const adjustedSuccessRate = baseSuccessRate * multiplier;
-
-        success = Math.random() * 100 < adjustedSuccessRate;
-        signature = `simulated_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-        console.log("🎮 Using simulation for transaction", {
-          successRate: adjustedSuccessRate,
-          networkCondition: networkCondition.congestion,
-        });
+          if ("_realGateway" in buildResult && buildResult._realGateway) {
+            realTransactionAttempted = true;
+            const sendResult = await this.sendTransaction(
+              buildResult.transaction
+            );
+            signature = sendResult.signature;
+            console.log("🔗 Real Gateway transaction attempted");
+          }
+        } catch (error) {
+          console.log("🔗 Real Gateway failed", error);
+          realGatewayUsed = false;
+        }
       }
 
-      const finalSuccess =
-        success && Math.random() * 100 < networkCondition.successRate;
+      // If no real transaction, generate simulated signature
+      if (!signature) {
+        signature = gatewaySuccess
+          ? `gateway_sim_${Date.now()}_${Math.random()
+              .toString(36)
+              .substr(2, 6)}`
+          : undefined;
+      }
 
       return {
-        success: finalSuccess,
+        success: gatewaySuccess,
         cost: this.getEstimatedCost(strategy),
-        latency: this.getLatency(strategy) * (1 + (Math.random() - 0.5) * 0.3), // Add variance
+        latency: this.getLatency(strategy) * (1 + (Math.random() - 0.5) * 0.4),
         strategyUsed: strategy,
         signature,
         _realGateway: realGatewayUsed,
         _networkCondition: networkCondition.congestion,
-        _adjustedForNetwork: true,
+        _gatewaySuccessRate: gatewaySuccessRate,
+        _gatewayResponded: gatewayResponds,
+        _realTransactionAttempted: realTransactionAttempted,
       };
     } catch (error) {
-      console.log("Error in game transaction simulation:", error);
-      return this.basicSimulation(strategy, networkCondition);
+      console.error("🔗 Gateway simulation error:", error);
+
+      return {
+        success: Math.random() > 0.8,
+        cost: this.getEstimatedCost(strategy),
+        latency: this.getLatency(strategy) * 3,
+        strategyUsed: strategy,
+        signature: undefined,
+        _realGateway: false,
+        _networkCondition: networkCondition.congestion,
+        _gatewayError: true,
+      };
     }
   }
 
