@@ -247,12 +247,6 @@ export const Game: React.FC<GameProps> = ({
         };
 
         await refetchBalance();
-
-        toastService.success(
-          `${strategy.name} transaction ${
-            result.success ? "successful" : "attempted"
-          }!`
-        );
       } else {
         console.log(`🎮 Simulating transaction: ${strategy.name}`);
 
