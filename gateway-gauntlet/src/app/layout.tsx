@@ -15,12 +15,11 @@ export const viewport = {
   maximumScale: 1,
 };
 
-export const themeColor = "#e5ff4a";
-
 export const metadata = {
   title: "Gateway Gauntlet - Sanctum Hackathon",
   description: "Master Solana transaction delivery with Sanctum Gateway",
   manifest: "/manifest.json",
+  themeColor: "#e5ff4a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
