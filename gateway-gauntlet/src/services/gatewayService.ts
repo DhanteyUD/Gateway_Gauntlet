@@ -138,7 +138,7 @@ class GatewayService {
 
       if (!buildGatewayTransactionResponse.ok) {
         const errorText = await buildGatewayTransactionResponse.text();
-        console.error("❌ Gateway build HTTP error:", {
+        console.log("❌ Gateway build HTTP error:", {
           status: buildGatewayTransactionResponse.status,
           error: errorText,
         });
@@ -150,7 +150,7 @@ class GatewayService {
       const response = await buildGatewayTransactionResponse.json();
 
       if (response.error) {
-        console.error("Gateway build error details:", response.error);
+        console.log("Gateway build error details:", response.error);
         throw new Error(
           `Gateway error: ${response.error.message} (code: ${response.error.code})`
         );
@@ -163,7 +163,7 @@ class GatewayService {
         _realGateway: true,
       };
     } catch (error) {
-      console.error("❌ Error building gateway transaction:", error);
+      console.log("❌ Error building gateway transaction:", error);
       return await this.simulateGatewayCall(options.strategy || "hybrid");
     }
   }
@@ -206,7 +206,7 @@ class GatewayService {
       console.log("✅ Transaction sent via Gateway:", response.result);
       return response.result;
     } catch (error) {
-      console.error("❌ Error sending transaction:", error);
+      console.log("❌ Error sending transaction:", error);
       return {
         signature: `simulated_${Date.now()}_${Math.random()
           .toString(36)
@@ -338,7 +338,7 @@ class GatewayService {
         _adjustedForNetwork: true,
       };
     } catch (error) {
-      console.error("Error in game transaction simulation:", error);
+      console.log("Error in game transaction simulation:", error);
       return this.basicSimulation(strategy, networkCondition);
     }
   }

@@ -84,7 +84,7 @@ export const useGatewayTransaction = () => {
           ),
         };
       } catch (error) {
-        console.error("Transaction error:", error);
+        console.log("Transaction error:", error);
         return {
           signature: `simulated_${Date.now()}_${Math.random()
             .toString(36)
@@ -114,7 +114,7 @@ export const useGatewayTransaction = () => {
     },
 
     onError: (error) => {
-      console.error("Transaction failed:", error);
+      console.log("Transaction failed:", error);
     },
   });
 
