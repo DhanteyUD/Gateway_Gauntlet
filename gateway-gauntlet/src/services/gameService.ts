@@ -13,95 +13,95 @@ export class GameService {
         `🎮 Executing ${strategyId} strategy in ${networkCondition.congestion} conditions`
       );
 
-      const strategySuccessRates = {
-        safe: 90,
-        balanced: 75,
-        fast: 60,
-        cheap: 80,
-      };
+      const successProbability = this.calculateRealSuccessProbability(
+        strategyId,
+        networkCondition
+      );
 
-      const baseSuccessRate =
-        strategySuccessRates[strategyId as keyof typeof strategySuccessRates] ||
-        70;
+      console.log(
+        `📊 Calculated success probability: ${successProbability.toFixed(1)}%`
+      );
 
-      const networkMultipliers = {
-        low: 1.0,
-        medium: 0.8,
-        high: 0.6,
-        extreme: 0.4,
-      };
+      const shouldUseRealGateway = !!publicKey && Math.random() > 0.7;
 
-      const networkMultiplier =
-        networkMultipliers[networkCondition.congestion] || 0.7;
-      const adjustedSuccessRate = baseSuccessRate * networkMultiplier;
-
-      const shouldUseRealGateway = !!publicKey && Math.random() > 0.3;
-
-      let result;
+      let gatewayResult;
       let realGatewayUsed = false;
 
       if (shouldUseRealGateway) {
-        console.log("🔗 Using real Gateway API...");
-
+        console.log("🔗 Attempting real Gateway API...");
         try {
-          const gatewayResult = await gatewayService.simulateGameTransaction(
+          gatewayResult = await gatewayService.simulateGameTransaction(
             strategyId,
             networkCondition
           );
           realGatewayUsed = gatewayResult._realGateway || false;
-
-          const gatewaySuccess = gatewayResult.success || false;
-          const finalSuccess =
-            Math.random() * 100 <
-            adjustedSuccessRate * (gatewaySuccess ? 1.1 : 0.9);
-
-          result = {
-            success: finalSuccess,
-            cost: gatewayResult.cost,
-            latency: gatewayResult.latency * (1 + Math.random() * 0.5),
-            strategyUsed: strategyId,
-            signature: gatewayResult.signature,
-            realGateway: realGatewayUsed,
-            networkCondition: networkCondition.congestion,
-          };
+          console.log(
+            `🔗 Gateway result: ${
+              gatewayResult.success ? "✅ Success" : "❌ Failed"
+            }`
+          );
         } catch (gatewayError) {
-          console.error(
-            "Gateway error, falling back to simulation:",
-            gatewayError
-          );
-          result = this.createSimulatedResult(
-            strategyId,
-            adjustedSuccessRate,
-            networkCondition
-          );
+          console.error("Gateway error:", gatewayError);
         }
+      }
+
+      let finalSuccess: boolean;
+
+      if (gatewayResult) {
+        finalSuccess = gatewayResult.success;
       } else {
-        console.log("🎮 Using simulation...");
-        result = this.createSimulatedResult(
-          strategyId,
-          adjustedSuccessRate,
-          networkCondition
+        const randomRoll = Math.random() * 100;
+        finalSuccess = randomRoll < successProbability;
+
+        console.log(
+          `🎲 Probability roll: ${randomRoll.toFixed(
+            1
+          )} < ${successProbability.toFixed(1)} = ${
+            finalSuccess ? "✅ Success" : "❌ Failed"
+          }`
         );
       }
 
+      const baseCost = this.getStrategyCost(strategyId);
+      const finalCost = finalSuccess ? baseCost : baseCost * 0.3;
+
       const baseLatency = this.getStrategyLatency(strategyId);
-      const networkLatencyMultipliers = {
-        low: 1.0,
-        medium: 1.5,
-        high: 2.5,
-        extreme: 4.0,
+      const networkLatencyMultiplier = this.getNetworkLatencyMultiplier(
+        networkCondition.congestion
+      );
+      const variance = 0.8 + Math.random() * 0.4;
+      const finalLatency = baseLatency * networkLatencyMultiplier * variance;
+
+      const signature = finalSuccess
+        ? realGatewayUsed
+          ? `gateway_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+          : `simulated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        : undefined;
+
+      const result = {
+        success: finalSuccess,
+        cost: finalCost,
+        latency: Math.round(finalLatency),
+        strategyUsed: strategyId,
+        signature,
+        realGateway: realGatewayUsed,
+        networkCondition: networkCondition.congestion,
+        _successProbability: successProbability,
+        _randomRoll: gatewayResult ? undefined : Math.random() * 100,
       };
 
-      const latencyMultiplier =
-        networkLatencyMultipliers[networkCondition.congestion] || 1.5;
-      result.latency =
-        baseLatency * latencyMultiplier * (0.8 + Math.random() * 0.4);
-
       console.log(
-        `📊 Result: ${
-          result.success ? "✅ Success" : "❌ Failed"
-        } (${adjustedSuccessRate.toFixed(1)}% chance)`
+        `📊 Final result: ${finalSuccess ? "✅ SUCCESS" : "❌ FAILED"}`,
+        {
+          strategy: strategyId,
+          network: networkCondition.congestion,
+          probability: `${successProbability.toFixed(1)}%`,
+          cost: `${finalCost.toFixed(6)} SOL`,
+          latency: `${Math.round(finalLatency)}ms`,
+          gatewayUsed: realGatewayUsed,
+        }
       );
+
       return result;
     } catch (error) {
       console.error("Game service error:", error);
@@ -109,24 +109,38 @@ export class GameService {
     }
   }
 
-  private createSimulatedResult(
+  private calculateRealSuccessProbability(
     strategyId: string,
-    successRate: number,
     networkCondition: NetworkCondition
-  ) {
-    const success = Math.random() * 100 < successRate;
-
-    return {
-      success,
-      cost: this.getStrategyCost(strategyId),
-      latency: this.getStrategyLatency(strategyId),
-      strategyUsed: strategyId,
-      signature: success
-        ? `simulated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        : undefined,
-      realGateway: false,
-      networkCondition: networkCondition.congestion,
+  ): number {
+    const baseRates: Record<string, number> = {
+      safe: 90,
+      balanced: 75,
+      fast: 60,
+      cheap: 80,
     };
+
+    const networkMultipliers: Record<string, number> = {
+      low: 0.95,
+      medium: 0.75,
+      high: 0.5,
+      extreme: 0.3,
+    };
+
+    const baseRate = baseRates[strategyId] || 70;
+    const multiplier = networkMultipliers[networkCondition.congestion] || 0.7;
+
+    return Math.max(5, Math.min(95, baseRate * multiplier));
+  }
+
+  private getNetworkLatencyMultiplier(congestion: string): number {
+    const multipliers: Record<string, number> = {
+      low: 1.0,
+      medium: 2.0,
+      high: 4.0,
+      extreme: 8.0,
+    };
+    return multipliers[congestion] || 2.0;
   }
 
   private createErrorResult(
@@ -136,15 +150,13 @@ export class GameService {
   ) {
     return {
       success: false,
-      cost: this.getStrategyCost(strategyId),
+      cost: this.getStrategyCost(strategyId) * 0.5,
       latency: 0,
       strategyUsed: strategyId,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Transaction simulation failed",
+      error: error instanceof Error ? error.message : "Transaction failed",
       realGateway: false,
       networkCondition: networkCondition.congestion,
+      _error: true,
     };
   }
 
@@ -172,18 +184,7 @@ export class GameService {
     strategyId: string,
     networkCondition: NetworkCondition
   ): number {
-    const strategyScores = {
-      safe: { low: 90, medium: 85, high: 80, extreme: 75 },
-      balanced: { low: 85, medium: 80, high: 75, extreme: 65 },
-      fast: { low: 70, medium: 60, high: 50, extreme: 40 },
-      cheap: { low: 80, medium: 70, high: 60, extreme: 50 },
-    };
-
-    const strategyScore =
-      strategyScores[strategyId as keyof typeof strategyScores];
-    if (!strategyScore) return 70;
-
-    return strategyScore[networkCondition.congestion] || 70;
+    return this.calculateRealSuccessProbability(strategyId, networkCondition);
   }
 }
 
