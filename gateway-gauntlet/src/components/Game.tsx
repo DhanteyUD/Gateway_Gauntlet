@@ -215,61 +215,44 @@ export const Game: React.FC<GameProps> = ({
     if (!strategy) return;
 
     try {
-      if (!publicKey) return;
-
-      let result: TransactionResult;
-
-      if (connected && publicKey) {
-        if (walletBalance !== undefined && walletBalance < strategy.cost) {
-          toastService.transactionFailed(
-            `Insufficient balance. Need ${
-              strategy.cost
-            } SOL, have ${walletBalance.toFixed(4)} SOL`
-          );
-        }
-
-        const transactionResult = await sendGatewayTransaction({ strategyId });
-
-        result = {
-          success:
-            !!transactionResult.signature &&
-            !transactionResult.signature.includes("failed"),
-          cost: strategy.cost,
-          latency: 150 + Math.random() * 300,
-          strategyUsed: strategy.name,
-          signature: transactionResult.signature,
-          realGateway: transactionResult.realGateway,
-          networkCondition: currentCondition.congestion,
-          timestamp: Date.now(),
-          _realTransaction: true,
-          _amountSent: strategy.cost,
-          _recipient: GATEWAY_HOST_ADDRESS,
-        };
-
-        await refetchBalance();
-      } else {
-        console.log(`🎮 Simulating transaction: ${strategy.name}`);
-
-        const simulationResult = await gameService.sendGameTransaction(
-          strategyId,
-          currentCondition,
-          publicKey
+      if (!connected || !publicKey) {
+        toastService.warning(
+          "Please connect your wallet to send real transactions"
         );
-
-        result = {
-          ...simulationResult,
-          timestamp: Date.now(),
-          networkCondition: String(
-            simulationResult.networkCondition ?? currentCondition.congestion
-          ),
-          _realTransaction: false,
-          _simulated: true,
-        };
-
-        toastService.info(
-          `${strategy.name} strategy simulated (connect wallet for real transactions)`
-        );
+        setIsSending(false);
+        return;
       }
+
+      if (walletBalance !== undefined && walletBalance < strategy.cost) {
+        toastService.error(
+          `Insufficient balance. Need ${
+            strategy.cost
+          } SOL, have ${walletBalance.toFixed(4)} SOL`
+        );
+        setIsSending(false);
+        return;
+      }
+
+      const transactionResult = await sendGatewayTransaction({ strategyId });
+
+      const result: TransactionResult = {
+        success:
+          !!transactionResult.signature &&
+          !transactionResult.signature.includes("failed") &&
+          !transactionResult.signature.startsWith("simulated_"),
+        cost: strategy.cost,
+        latency: 150 + Math.random() * 300,
+        strategyUsed: strategy.name,
+        signature: transactionResult.signature,
+        realGateway: true,
+        networkCondition: currentCondition.congestion,
+        timestamp: Date.now(),
+        _realTransaction: true,
+        _amountSent: strategy.cost,
+        _recipient: GATEWAY_HOST_ADDRESS,
+      };
+
+      await refetchBalance();
 
       const newScore =
         gameState.score +
@@ -284,16 +267,20 @@ export const Game: React.FC<GameProps> = ({
         totalCost: prev.totalCost + result.cost,
         score: newScore,
         currentLevel: newLevel,
-        totalRealGatewayUsed:
-          prev.totalRealGatewayUsed + (result.realGateway ? 1 : 0),
-        totalRealTransactions:
-          prev.totalRealTransactions + (result._realTransaction ? 1 : 0),
+        totalRealGatewayUsed: prev.totalRealGatewayUsed + 1,
+        totalRealTransactions: prev.totalRealTransactions + 1,
       }));
 
       setTransactionHistory((prev) => [result, ...prev.slice(0, 19)]);
 
       setLastResult(result);
       setShowResultModal(true);
+
+      if (result.success) {
+        toastService.transactionSuccess(result.signature!, result.cost);
+      } else {
+        toastService.transactionFailed(strategy.name, result.error);
+      }
     } catch (error) {
       console.error("Transaction failed:", error);
 
@@ -303,10 +290,10 @@ export const Game: React.FC<GameProps> = ({
         latency: 0,
         strategyUsed: strategyId,
         error: error instanceof Error ? error.message : "Transaction failed",
-        realGateway: false,
+        realGateway: true,
         networkCondition: String(currentCondition.congestion),
         timestamp: Date.now(),
-        _realTransaction: connected && publicKey ? true : false,
+        _realTransaction: true,
         _errorDetails: error instanceof Error ? error.message : "Unknown error",
       };
 

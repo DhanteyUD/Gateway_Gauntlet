@@ -1,8 +1,8 @@
 import {
   PublicKey,
-  SystemProgram,
   LAMPORTS_PER_SOL,
   Transaction,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,14 +15,14 @@ export const GATEWAY_HOST_ADDRESS =
 
 export const useGatewayTransaction = () => {
   const queryClient = useQueryClient();
-  
+
   const { connection } = useConnection();
-  const { publicKey } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
 
   const mutation = useMutation({
     mutationFn: async ({ strategyId }: { strategyId: string }) => {
-      if (!publicKey) {
-        throw new Error("Wallet not connected");
+      if (!publicKey || !signTransaction) {
+        throw new Error("Wallet not connected or cannot sign");
       }
 
       const strategy = GAME_STRATEGIES.find((s) => s.id === strategyId);
@@ -38,63 +38,64 @@ export const useGatewayTransaction = () => {
         jitoTipRange: strategy.gatewayOptions.jitoTipRange,
         cuPriceRange: strategy.gatewayOptions.cuPriceRange,
         skipSimulation: strategy.gatewayOptions.skipSimulation,
+        fromPubkey: publicKey,
       };
 
-      try {
-        console.log("🔧 Building Gateway transaction...");
-        const buildResult = await gatewayService.buildGatewayTransaction({
-          ...gatewayOptions,
-          jitoTip: Math.floor(lamports * 0.01),
-        });
+      console.log("🔧 Building Gateway transaction with real SOL...");
+      console.log("💰 Sending:", lamports / LAMPORTS_PER_SOL, "SOL");
+      console.log("📍 From:", publicKey.toString());
+      console.log("📍 To:", toPubKey.toString());
 
-        let signature: string;
+      const buildResult = await gatewayService.buildGatewayTransaction({
+        ...gatewayOptions,
+        jitoTip: Math.floor(lamports * 0.01),
+        toPubkey: toPubKey,
+        lamports,
+      });
 
-        if (!("_simulated" in buildResult) || !buildResult._simulated) {
-          const sendResult = await gatewayService.sendTransaction(
-            buildResult.transaction
-          );
-          signature = sendResult.signature;
-        } else {
-          console.log("🎮 Falling back to regular transaction...");
-          const transaction = new Transaction().add(
-            SystemProgram.transfer({
-              fromPubkey: publicKey,
-              toPubkey: toPubKey,
-              lamports,
-            })
-          );
-
-          const { blockhash } = await connection.getLatestBlockhash();
-          transaction.recentBlockhash = blockhash;
-          transaction.feePayer = publicKey;
-
-          throw new Error("Wallet sending not implemented - using simulation");
-        }
-
-        if (signature && !signature.startsWith("simulated_")) {
-          await connection.confirmTransaction(signature, "confirmed");
-        }
-
-        return {
-          signature,
-          strategy: strategy.name,
-          cost: strategy.cost,
-          realGateway: !!(
-            "_realGateway" in buildResult && buildResult._realGateway
-          ),
-        };
-      } catch (error) {
-        console.log("Transaction error:", error);
-        return {
-          signature: `simulated_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`,
-          strategy: strategy.name,
-          cost: strategy.cost,
-          realGateway: false,
-          simulated: true,
-        };
+      if (buildResult._simulated) {
+        throw new Error("Gateway returned simulated transaction");
       }
+
+      const transactionBuffer = Buffer.from(buildResult.transaction, "base64");
+      let transaction: Transaction | VersionedTransaction;
+
+      try {
+        transaction = VersionedTransaction.deserialize(transactionBuffer);
+      } catch {
+        transaction = Transaction.from(transactionBuffer);
+      }
+
+      console.log("✍️ Signing transaction with wallet...");
+
+      const signedTransaction = await signTransaction(transaction);
+
+      console.log("🚀 Sending signed transaction via Gateway...");
+
+      const sendResult = await gatewayService.sendSignedTransaction(
+        signedTransaction
+      );
+
+      if (
+        !sendResult.signature ||
+        sendResult.signature.startsWith("simulated_")
+      ) {
+        throw new Error("Failed to send real transaction");
+      }
+
+      console.log("⏳ Confirming transaction...");
+
+      await connection.confirmTransaction(sendResult.signature, "confirmed");
+
+      console.log("✅ Transaction confirmed!");
+
+      return {
+        signature: sendResult.signature,
+        strategy: strategy.name,
+        cost: strategy.cost,
+        realGateway: true,
+        realTransaction: true,
+      };
     },
 
     onSuccess: (result) => {
@@ -108,13 +109,13 @@ export const useGatewayTransaction = () => {
       }
 
       console.log(
-        `🎯 Transaction ${result.realGateway ? "via Gateway" : "simulated"}:`,
+        `🎯 Real transaction sent via Gateway:`,
         result.signature.slice(0, 8) + "..."
       );
     },
 
     onError: (error) => {
-      console.log("Transaction failed:", error);
+      console.error("❌ Transaction failed:", error);
     },
   });
 

@@ -20,6 +20,7 @@ interface NetworkCondition {
   successRate: number;
   congestion: "low" | "medium" | "high" | "extreme";
 }
+
 interface BuildTransactionOptions {
   strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
   jitoTip?: number;
@@ -29,6 +30,8 @@ interface BuildTransactionOptions {
   skipSimulation?: boolean;
   deliveryMethodType?: "rpc" | "jito" | "sanctum-sender" | "helius-sender";
   fromPubkey?: PublicKey;
+  toPubkey?: PublicKey;
+  lamports?: number;
   [key: string]: string | number | boolean | PublicKey | undefined;
 }
 
@@ -46,17 +49,24 @@ class GatewayService {
 
   async buildGatewayTransaction(options: BuildTransactionOptions = {}) {
     try {
-      const fromPubkey =
-        options.fromPubkey || new PublicKey("11111111111111111111111111111111");
+      if (!options.fromPubkey) {
+        throw new Error("fromPubkey is required for real transactions");
+      }
 
-      const toPubkey = process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS
-        ? new PublicKey(process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS)
-        : new PublicKey("11111111111111111111111111111112");
+      const fromPubkey = options.fromPubkey;
+      const toPubkey =
+        options.toPubkey ||
+        (process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS
+          ? new PublicKey(process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS)
+          : new PublicKey("11111111111111111111111111111112"));
+
+      const lamports = options.lamports || 1000;
 
       console.log("🔧 Creating transaction with:", {
         from: fromPubkey.toString(),
         to: toPubkey.toString(),
         strategy: options.strategy,
+        lamports,
       });
 
       const { blockhash, lastValidBlockHeight } =
@@ -66,7 +76,7 @@ class GatewayService {
         SystemProgram.transfer({
           fromPubkey,
           toPubkey,
-          lamports: 1000,
+          lamports,
         })
       );
 
@@ -81,7 +91,7 @@ class GatewayService {
         lastValidBlockHeight,
         from: fromPubkey.toString().slice(0, 8) + "...",
         to: toPubkey.toString().slice(0, 8) + "...",
-        lamports: 1000,
+        lamports,
       });
 
       const gatewayParams: Record<string, string | boolean> = {
@@ -161,10 +171,11 @@ class GatewayService {
         transaction: response.result.transaction,
         latestBlockhash: response.result.latestBlockhash,
         _realGateway: true,
+        _simulated: false,
       };
     } catch (error) {
       console.log("❌ Error building gateway transaction:", error);
-      return await this.simulateGatewayCall(options.strategy || "hybrid");
+      throw error;
     }
   }
 
@@ -207,12 +218,25 @@ class GatewayService {
       return response.result;
     } catch (error) {
       console.log("❌ Error sending transaction:", error);
-      return {
-        signature: `simulated_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`,
-        _simulated: true,
-      };
+      throw error;
+    }
+  }
+
+  async sendSignedTransaction(
+    transaction: Transaction | import("@solana/web3.js").VersionedTransaction
+  ) {
+    try {
+      console.log("🚀 Sending signed transaction via Gateway...");
+
+      // Serialize the signed transaction
+      const serialized = transaction.serialize();
+      const encodedTransaction = Buffer.from(serialized).toString("base64");
+
+      // Send via Gateway
+      return await this.sendTransaction(encodedTransaction);
+    } catch (error) {
+      console.log("❌ Error sending signed transaction:", error);
+      throw error;
     }
   }
 
@@ -316,7 +340,6 @@ class GatewayService {
         }
       }
 
-      // If no real transaction, generate simulated signature
       if (!signature) {
         signature = gatewaySuccess
           ? `gateway_sim_${Date.now()}_${Math.random()
