@@ -2,7 +2,7 @@
 
 > **Master Solana Transaction Optimization Through Interactive Gamified Learning**
 
-[![Sanctum Hackathon](https://img.shields.io/badge/Sanctum-Hackathon-1b1718?style=for-the-badge&logo=solana&labelColor=e5ff4a&color=1b1718)](https://gateway.sanctum.so)
+[![Indie.fun Hackathon](https://img.shields.io/badge/Indie.fun-Hackathon-1b1718?style=for-the-badge&logo=Indie.fun&labelColor=e5ff4a&color=1b1718)](https://indie.fun/)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-1b1718?style=for-the-badge&logo=solana&labelColor=9945FF&color=1b1718)](https://solana.com)
 [![Next.js](https://img.shields.io/badge/Next.js-16-1b1718?style=for-the-badge&logo=next.js&labelColor=000000&color=1b1718)](https://nextjs.org)
 
@@ -10,7 +10,8 @@ Gateway Gauntlet is an immersive educational game that teaches developers how to
 
 ---
 
-<img width="1268" height="958" alt="Gateway Gauntlet" src="https://github.com/user-attachments/assets/ba326401-e5a4-4ddc-a90f-2b59bacfd751" />
+<img width="1359" height="956" alt="Screenshot 2025-12-13 at 2 11 28 AM" src="https://github.com/user-attachments/assets/3e121e7e-d05e-4fb4-95d7-c127980399f1" />
+
 
 ---
 
