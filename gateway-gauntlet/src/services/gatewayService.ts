@@ -15,6 +15,7 @@ if (typeof window !== "undefined") {
 }
 
 const GATEWAY_PROXY_ENDPOINT = "/api/gateway";
+const SANCTUM_GATEWAY_API_KEY = process.env.NEXT_PUBLIC_SANCTUM_GATEWAY_API_KEY;
 
 interface NetworkCondition {
   successRate: number;
@@ -62,7 +63,7 @@ class GatewayService {
 
       const lamports = options.lamports || 1000;
 
-      console.log("🔧 Creating transaction with:", {
+      console.log("🔧 Creating unsigned transaction with:", {
         from: fromPubkey.toString(),
         to: toPubkey.toString(),
         strategy: options.strategy,
@@ -85,7 +86,7 @@ class GatewayService {
 
       const encodedTransaction = encodeTransactionToBase64(transaction);
 
-      console.log("🔧 Building Gateway transaction with options:", options);
+      console.log("📦 Gateway params:");
       console.log("📦 Transaction details:", {
         blockhash: blockhash.slice(0, 8) + "...",
         lastValidBlockHeight,
@@ -93,13 +94,12 @@ class GatewayService {
         to: toPubkey.toString().slice(0, 8) + "...",
         lamports,
       });
-
       const gatewayParams: Record<string, string | boolean> = {
         encoding: "base64",
       };
 
-      if (options.skipSimulation !== undefined) {
-        gatewayParams.skipSimulation = options.skipSimulation;
+      if (options.skipSimulation === true) {
+        gatewayParams.skipSimulation = true;
       }
 
       if (options.strategy) {
@@ -124,11 +124,7 @@ class GatewayService {
         gatewayParams.cuPriceRange = options.cuPriceRange;
       }
 
-      if (options.deliveryMethodType) {
-        gatewayParams.deliveryMethodType = options.deliveryMethodType;
-      }
-
-      console.log("📦 Gateway params being sent:", gatewayParams);
+      console.log("📦 Sending to Gateway:", gatewayParams);
 
       const buildGatewayTransactionResponse = await fetch(
         GATEWAY_PROXY_ENDPOINT,
@@ -136,6 +132,7 @@ class GatewayService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${SANCTUM_GATEWAY_API_KEY}`,
           },
           body: JSON.stringify({
             id: "gateway-gauntlet",
@@ -153,14 +150,14 @@ class GatewayService {
           error: errorText,
         });
         throw new Error(
-          `Gateway build failed: ${buildGatewayTransactionResponse.status}`
+          `Gateway build failed: ${buildGatewayTransactionResponse.status} - ${errorText}`
         );
       }
 
       const response = await buildGatewayTransactionResponse.json();
 
       if (response.error) {
-        console.log("Gateway build error details:", response.error);
+        console.log("❌ Gateway build error:", response.error);
         throw new Error(
           `Gateway error: ${response.error.message} (code: ${response.error.code})`
         );
@@ -181,7 +178,7 @@ class GatewayService {
 
   async sendTransaction(encodedTransaction: string) {
     try {
-      console.log("🚀 Sending transaction via Gateway...");
+      console.log("🚀 Sending signed transaction via Gateway...");
 
       const sendTransactionResponse = await fetch(GATEWAY_PROXY_ENDPOINT, {
         method: "POST",
@@ -196,6 +193,7 @@ class GatewayService {
             encodedTransaction,
             {
               encoding: "base64",
+              skipPreflight: false,
             },
           ],
         }),
@@ -203,6 +201,10 @@ class GatewayService {
 
       if (!sendTransactionResponse.ok) {
         const errorText = await sendTransactionResponse.text();
+        console.log("❌ Gateway send HTTP error:", {
+          status: sendTransactionResponse.status,
+          error: errorText,
+        });
         throw new Error(
           `Gateway send failed: ${sendTransactionResponse.status} - ${errorText}`
         );
@@ -211,31 +213,16 @@ class GatewayService {
       const response = await sendTransactionResponse.json();
 
       if (response.error) {
-        throw new Error(`Gateway error: ${response.error.message}`);
+        console.log("❌ Gateway send error:", response.error);
+        throw new Error(
+          `Gateway error: ${response.error.message} (code: ${response.error.code})`
+        );
       }
 
       console.log("✅ Transaction sent via Gateway:", response.result);
       return response.result;
     } catch (error) {
       console.log("❌ Error sending transaction:", error);
-      throw error;
-    }
-  }
-
-  async sendSignedTransaction(
-    transaction: Transaction | import("@solana/web3.js").VersionedTransaction
-  ) {
-    try {
-      console.log("🚀 Sending signed transaction via Gateway...");
-
-      // Serialize the signed transaction
-      const serialized = transaction.serialize();
-      const encodedTransaction = Buffer.from(serialized).toString("base64");
-
-      // Send via Gateway
-      return await this.sendTransaction(encodedTransaction);
-    } catch (error) {
-      console.log("❌ Error sending signed transaction:", error);
       throw error;
     }
   }
@@ -361,7 +348,7 @@ class GatewayService {
         _realTransactionAttempted: realTransactionAttempted,
       };
     } catch (error) {
-      console.error("🔗 Gateway simulation error:", error);
+      console.log("🔗 Gateway simulation error:", error);
 
       return {
         success: Math.random() > 0.8,

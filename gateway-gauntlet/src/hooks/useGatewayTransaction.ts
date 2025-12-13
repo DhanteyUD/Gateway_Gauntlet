@@ -48,7 +48,7 @@ export const useGatewayTransaction = () => {
 
       const buildResult = await gatewayService.buildGatewayTransaction({
         ...gatewayOptions,
-        jitoTip: Math.floor(lamports * 0.01),
+        fromPubkey: publicKey,
         toPubkey: toPubKey,
         lamports,
       });
@@ -57,23 +57,45 @@ export const useGatewayTransaction = () => {
         throw new Error("Gateway returned simulated transaction");
       }
 
+      console.log("✅ Gateway built transaction successfully");
+      console.log("📦 Gateway response:", {
+        hasTransaction: !!buildResult.transaction,
+        transactionLength: buildResult.transaction?.length,
+      });
+
       const transactionBuffer = Buffer.from(buildResult.transaction, "base64");
+
+      console.log("📦 Transaction buffer length:", transactionBuffer.length);
+
       let transaction: Transaction | VersionedTransaction;
 
       try {
-        transaction = VersionedTransaction.deserialize(transactionBuffer);
-      } catch {
         transaction = Transaction.from(transactionBuffer);
+        console.log("✅ Successfully decoded as legacy Transaction");
+      } catch (error) {
+        console.log("❌ Failed to decode transaction:", error);
+        throw new Error("Failed to decode Gateway transaction");
       }
 
       console.log("✍️ Signing transaction with wallet...");
+      console.log("📦 Transaction details:", {
+        signatures: transaction.signatures.length,
+        instructions: transaction.instructions.length,
+        feePayer: transaction.feePayer?.toString(),
+      });
 
       const signedTransaction = await signTransaction(transaction);
 
+      console.log("✅ Transaction signed");
       console.log("🚀 Sending signed transaction via Gateway...");
 
-      const sendResult = await gatewayService.sendSignedTransaction(
-        signedTransaction
+      const serialized = signedTransaction.serialize();
+      const base64Transaction = Buffer.from(serialized).toString("base64");
+
+      console.log("📦 Signed transaction length:", serialized.length);
+
+      const sendResult = await gatewayService.sendTransaction(
+        base64Transaction
       );
 
       if (
@@ -83,6 +105,7 @@ export const useGatewayTransaction = () => {
         throw new Error("Failed to send real transaction");
       }
 
+      console.log("✅ Transaction sent! Signature:", sendResult.signature);
       console.log("⏳ Confirming transaction...");
 
       await connection.confirmTransaction(sendResult.signature, "confirmed");
@@ -115,7 +138,7 @@ export const useGatewayTransaction = () => {
     },
 
     onError: (error) => {
-      console.error("❌ Transaction failed:", error);
+      console.log("❌ Transaction failed:", error);
     },
   });
 
