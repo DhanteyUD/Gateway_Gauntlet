@@ -15,11 +15,13 @@ if (typeof window !== "undefined") {
 }
 
 const GATEWAY_PROXY_ENDPOINT = "/api/gateway";
+const SANCTUM_GATEWAY_API_KEY = process.env.NEXT_PUBLIC_SANCTUM_GATEWAY_API_KEY;
 
 interface NetworkCondition {
   successRate: number;
   congestion: "low" | "medium" | "high" | "extreme";
 }
+
 interface BuildTransactionOptions {
   strategy?: "jito" | "rpc" | "hybrid" | "sanctum";
   jitoTip?: number;
@@ -29,6 +31,8 @@ interface BuildTransactionOptions {
   skipSimulation?: boolean;
   deliveryMethodType?: "rpc" | "jito" | "sanctum-sender" | "helius-sender";
   fromPubkey?: PublicKey;
+  toPubkey?: PublicKey;
+  lamports?: number;
   [key: string]: string | number | boolean | PublicKey | undefined;
 }
 
@@ -46,17 +50,24 @@ class GatewayService {
 
   async buildGatewayTransaction(options: BuildTransactionOptions = {}) {
     try {
-      const fromPubkey =
-        options.fromPubkey || new PublicKey("11111111111111111111111111111111");
+      if (!options.fromPubkey) {
+        throw new Error("fromPubkey is required for real transactions");
+      }
 
-      const toPubkey = process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS
-        ? new PublicKey(process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS)
-        : new PublicKey("11111111111111111111111111111112");
+      const fromPubkey = options.fromPubkey;
+      const toPubkey =
+        options.toPubkey ||
+        (process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS
+          ? new PublicKey(process.env.NEXT_PUBLIC_GATEWAY_HOST_ADDRESS)
+          : new PublicKey("11111111111111111111111111111112"));
 
-      console.log("🔧 Creating transaction with:", {
+      const lamports = options.lamports || 1000;
+
+      console.log("🔧 Creating unsigned transaction with:", {
         from: fromPubkey.toString(),
         to: toPubkey.toString(),
         strategy: options.strategy,
+        lamports,
       });
 
       const { blockhash, lastValidBlockHeight } =
@@ -66,7 +77,7 @@ class GatewayService {
         SystemProgram.transfer({
           fromPubkey,
           toPubkey,
-          lamports: 1000,
+          lamports,
         })
       );
 
@@ -75,21 +86,20 @@ class GatewayService {
 
       const encodedTransaction = encodeTransactionToBase64(transaction);
 
-      console.log("🔧 Building Gateway transaction with options:", options);
+      console.log("📦 Gateway params:");
       console.log("📦 Transaction details:", {
         blockhash: blockhash.slice(0, 8) + "...",
         lastValidBlockHeight,
         from: fromPubkey.toString().slice(0, 8) + "...",
         to: toPubkey.toString().slice(0, 8) + "...",
-        lamports: 1000,
+        lamports,
       });
-
       const gatewayParams: Record<string, string | boolean> = {
         encoding: "base64",
       };
 
-      if (options.skipSimulation !== undefined) {
-        gatewayParams.skipSimulation = options.skipSimulation;
+      if (options.skipSimulation === true) {
+        gatewayParams.skipSimulation = true;
       }
 
       if (options.strategy) {
@@ -114,11 +124,7 @@ class GatewayService {
         gatewayParams.cuPriceRange = options.cuPriceRange;
       }
 
-      if (options.deliveryMethodType) {
-        gatewayParams.deliveryMethodType = options.deliveryMethodType;
-      }
-
-      console.log("📦 Gateway params being sent:", gatewayParams);
+      console.log("📦 Sending to Gateway:", gatewayParams);
 
       const buildGatewayTransactionResponse = await fetch(
         GATEWAY_PROXY_ENDPOINT,
@@ -126,6 +132,7 @@ class GatewayService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${SANCTUM_GATEWAY_API_KEY}`,
           },
           body: JSON.stringify({
             id: "gateway-gauntlet",
@@ -143,14 +150,14 @@ class GatewayService {
           error: errorText,
         });
         throw new Error(
-          `Gateway build failed: ${buildGatewayTransactionResponse.status}`
+          `Gateway build failed: ${buildGatewayTransactionResponse.status} - ${errorText}`
         );
       }
 
       const response = await buildGatewayTransactionResponse.json();
 
       if (response.error) {
-        console.log("Gateway build error details:", response.error);
+        console.log("❌ Gateway build error:", response.error);
         throw new Error(
           `Gateway error: ${response.error.message} (code: ${response.error.code})`
         );
@@ -161,16 +168,17 @@ class GatewayService {
         transaction: response.result.transaction,
         latestBlockhash: response.result.latestBlockhash,
         _realGateway: true,
+        _simulated: false,
       };
     } catch (error) {
       console.log("❌ Error building gateway transaction:", error);
-      return await this.simulateGatewayCall(options.strategy || "hybrid");
+      throw error;
     }
   }
 
   async sendTransaction(encodedTransaction: string) {
     try {
-      console.log("🚀 Sending transaction via Gateway...");
+      console.log("🚀 Sending signed transaction via Gateway...");
 
       const sendTransactionResponse = await fetch(GATEWAY_PROXY_ENDPOINT, {
         method: "POST",
@@ -185,6 +193,7 @@ class GatewayService {
             encodedTransaction,
             {
               encoding: "base64",
+              skipPreflight: false,
             },
           ],
         }),
@@ -192,6 +201,10 @@ class GatewayService {
 
       if (!sendTransactionResponse.ok) {
         const errorText = await sendTransactionResponse.text();
+        console.log("❌ Gateway send HTTP error:", {
+          status: sendTransactionResponse.status,
+          error: errorText,
+        });
         throw new Error(
           `Gateway send failed: ${sendTransactionResponse.status} - ${errorText}`
         );
@@ -200,19 +213,17 @@ class GatewayService {
       const response = await sendTransactionResponse.json();
 
       if (response.error) {
-        throw new Error(`Gateway error: ${response.error.message}`);
+        console.log("❌ Gateway send error:", response.error);
+        throw new Error(
+          `Gateway error: ${response.error.message} (code: ${response.error.code})`
+        );
       }
 
       console.log("✅ Transaction sent via Gateway:", response.result);
       return response.result;
     } catch (error) {
       console.log("❌ Error sending transaction:", error);
-      return {
-        signature: `simulated_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`,
-        _simulated: true,
-      };
+      throw error;
     }
   }
 
@@ -316,7 +327,6 @@ class GatewayService {
         }
       }
 
-      // If no real transaction, generate simulated signature
       if (!signature) {
         signature = gatewaySuccess
           ? `gateway_sim_${Date.now()}_${Math.random()
@@ -338,7 +348,7 @@ class GatewayService {
         _realTransactionAttempted: realTransactionAttempted,
       };
     } catch (error) {
-      console.error("🔗 Gateway simulation error:", error);
+      console.log("🔗 Gateway simulation error:", error);
 
       return {
         success: Math.random() > 0.8,

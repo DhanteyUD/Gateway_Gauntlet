@@ -1,8 +1,8 @@
 import {
   PublicKey,
-  SystemProgram,
   LAMPORTS_PER_SOL,
   Transaction,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,14 +15,14 @@ export const GATEWAY_HOST_ADDRESS =
 
 export const useGatewayTransaction = () => {
   const queryClient = useQueryClient();
-  
+
   const { connection } = useConnection();
-  const { publicKey } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
 
   const mutation = useMutation({
     mutationFn: async ({ strategyId }: { strategyId: string }) => {
-      if (!publicKey) {
-        throw new Error("Wallet not connected");
+      if (!publicKey || !signTransaction) {
+        throw new Error("Wallet not connected or cannot sign");
       }
 
       const strategy = GAME_STRATEGIES.find((s) => s.id === strategyId);
@@ -38,63 +38,87 @@ export const useGatewayTransaction = () => {
         jitoTipRange: strategy.gatewayOptions.jitoTipRange,
         cuPriceRange: strategy.gatewayOptions.cuPriceRange,
         skipSimulation: strategy.gatewayOptions.skipSimulation,
+        fromPubkey: publicKey,
       };
 
-      try {
-        console.log("🔧 Building Gateway transaction...");
-        const buildResult = await gatewayService.buildGatewayTransaction({
-          ...gatewayOptions,
-          jitoTip: Math.floor(lamports * 0.01),
-        });
+      console.log("🔧 Building Gateway transaction with real SOL...");
+      console.log("💰 Sending:", lamports / LAMPORTS_PER_SOL, "SOL");
+      console.log("📍 From:", publicKey.toString());
+      console.log("📍 To:", toPubKey.toString());
 
-        let signature: string;
+      const buildResult = await gatewayService.buildGatewayTransaction({
+        ...gatewayOptions,
+        fromPubkey: publicKey,
+        toPubkey: toPubKey,
+        lamports,
+      });
 
-        if (!("_simulated" in buildResult) || !buildResult._simulated) {
-          const sendResult = await gatewayService.sendTransaction(
-            buildResult.transaction
-          );
-          signature = sendResult.signature;
-        } else {
-          console.log("🎮 Falling back to regular transaction...");
-          const transaction = new Transaction().add(
-            SystemProgram.transfer({
-              fromPubkey: publicKey,
-              toPubkey: toPubKey,
-              lamports,
-            })
-          );
-
-          const { blockhash } = await connection.getLatestBlockhash();
-          transaction.recentBlockhash = blockhash;
-          transaction.feePayer = publicKey;
-
-          throw new Error("Wallet sending not implemented - using simulation");
-        }
-
-        if (signature && !signature.startsWith("simulated_")) {
-          await connection.confirmTransaction(signature, "confirmed");
-        }
-
-        return {
-          signature,
-          strategy: strategy.name,
-          cost: strategy.cost,
-          realGateway: !!(
-            "_realGateway" in buildResult && buildResult._realGateway
-          ),
-        };
-      } catch (error) {
-        console.log("Transaction error:", error);
-        return {
-          signature: `simulated_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`,
-          strategy: strategy.name,
-          cost: strategy.cost,
-          realGateway: false,
-          simulated: true,
-        };
+      if (buildResult._simulated) {
+        throw new Error("Gateway returned simulated transaction");
       }
+
+      console.log("✅ Gateway built transaction successfully");
+      console.log("📦 Gateway response:", {
+        hasTransaction: !!buildResult.transaction,
+        transactionLength: buildResult.transaction?.length,
+      });
+
+      const transactionBuffer = Buffer.from(buildResult.transaction, "base64");
+
+      console.log("📦 Transaction buffer length:", transactionBuffer.length);
+
+      let transaction: Transaction | VersionedTransaction;
+
+      try {
+        transaction = Transaction.from(transactionBuffer);
+        console.log("✅ Successfully decoded as legacy Transaction");
+      } catch (error) {
+        console.log("❌ Failed to decode transaction:", error);
+        throw new Error("Failed to decode Gateway transaction");
+      }
+
+      console.log("✍️ Signing transaction with wallet...");
+      console.log("📦 Transaction details:", {
+        signatures: transaction.signatures.length,
+        instructions: transaction.instructions.length,
+        feePayer: transaction.feePayer?.toString(),
+      });
+
+      const signedTransaction = await signTransaction(transaction);
+
+      console.log("✅ Transaction signed");
+      console.log("🚀 Sending signed transaction via Gateway...");
+
+      const serialized = signedTransaction.serialize();
+      const base64Transaction = Buffer.from(serialized).toString("base64");
+
+      console.log("📦 Signed transaction length:", serialized.length);
+
+      const sendResult = await gatewayService.sendTransaction(
+        base64Transaction
+      );
+
+      if (
+        !sendResult.signature ||
+        sendResult.signature.startsWith("simulated_")
+      ) {
+        throw new Error("Failed to send real transaction");
+      }
+
+      console.log("✅ Transaction sent! Signature:", sendResult.signature);
+      console.log("⏳ Confirming transaction...");
+
+      await connection.confirmTransaction(sendResult.signature, "confirmed");
+
+      console.log("✅ Transaction confirmed!");
+
+      return {
+        signature: sendResult.signature,
+        strategy: strategy.name,
+        cost: strategy.cost,
+        realGateway: true,
+        realTransaction: true,
+      };
     },
 
     onSuccess: (result) => {
@@ -108,13 +132,13 @@ export const useGatewayTransaction = () => {
       }
 
       console.log(
-        `🎯 Transaction ${result.realGateway ? "via Gateway" : "simulated"}:`,
+        `🎯 Real transaction sent via Gateway:`,
         result.signature.slice(0, 8) + "..."
       );
     },
 
     onError: (error) => {
-      console.log("Transaction failed:", error);
+      console.log("❌ Transaction failed:", error);
     },
   });
 
